@@ -207,7 +207,7 @@ function HomeContent() {
                 productos
               </motion.div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6 mb-8">
                 {paginatedProducts.map((product, index) => (
                   <motion.div
                     key={product.id}

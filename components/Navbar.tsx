@@ -6,9 +6,16 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 
+interface MenuItem {
+  id: string
+  label: string
+  url: string
+}
+
 interface AppSettings {
   whatsappNumber: string
   logo: string
+  menuItems?: MenuItem[]
   announcementBar?: {
     enabled: boolean
     messages: string[]
@@ -117,12 +124,20 @@ export default function Navbar() {
 
               {/* Menú derecho */}
               <div className="flex items-center space-x-6 flex-1 justify-end">
-                <Link
-                  href="/"
-                  className="text-gray-700 hover:text-primary-600 transition-colors"
-                >
-                  Catálogo
-                </Link>
+                {/* Items del menú dinámicos */}
+                {settings?.menuItems && settings.menuItems.length > 0 && (
+                  <>
+                    {settings.menuItems.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={item.url}
+                        className="text-gray-700 hover:text-primary-600 transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </>
+                )}
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}

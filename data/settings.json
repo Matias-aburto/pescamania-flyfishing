@@ -1,9 +1,22 @@
 {
   "whatsappNumber": "56996867047",
   "logo": "/images/products/1767452161248-Pescamania__2_.png",
+  "favicon": "",
   "primaryColor": "#070066",
   "minimumPurchase": 10000,
   "pickupAddress": "Galvarino 900, Loncoche",
+  "menuItems": [
+    {
+      "id": "1767629906719",
+      "label": "Moscas secas",
+      "url": "http://localhost:3002/"
+    },
+    {
+      "id": "1767629916029",
+      "label": "Ninfas",
+      "url": "http://localhost:3002/?categoria=Secas"
+    }
+  ],
   "announcementBar": {
     "enabled": true,
     "messages": [

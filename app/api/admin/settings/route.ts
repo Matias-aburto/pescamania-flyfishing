@@ -28,9 +28,11 @@ export async function GET() {
     const fullSettings: AppSettings = {
       whatsappNumber: settings.whatsappNumber || '',
       logo: settings.logo || '',
+      favicon: settings.favicon || '',
       primaryColor: settings.primaryColor || '#0284c7',
       minimumPurchase: settings.minimumPurchase !== undefined ? settings.minimumPurchase : 0,
       pickupAddress: settings.pickupAddress || '',
+      menuItems: settings.menuItems || [],
       announcementBar: {
         enabled: announcementBar.enabled || false,
         messages: announcementBar.messages || [],
@@ -76,9 +78,11 @@ export async function PUT(request: Request) {
     const settings: AppSettings = {
       whatsappNumber: body.whatsappNumber || '',
       logo: body.logo || '',
+      favicon: body.favicon || '',
       primaryColor: body.primaryColor || '#0284c7',
       minimumPurchase: body.minimumPurchase !== undefined ? body.minimumPurchase : 0,
       pickupAddress: body.pickupAddress || '',
+      menuItems: body.menuItems || [],
       announcementBar: {
         enabled: announcementBar.enabled || false,
         messages: announcementBar.messages || [],

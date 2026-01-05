@@ -3,12 +3,20 @@ import path from 'path';
 
 const settingsFilePath = path.join(process.cwd(), 'data', 'settings.json');
 
+export interface MenuItem {
+  id: string;
+  label: string;
+  url: string;
+}
+
 export interface AppSettings {
   whatsappNumber: string;
   logo: string;
+  favicon?: string; // Favicon del sitio
   primaryColor: string;
   minimumPurchase: number; // Mínimo de compra en pesos chilenos
   pickupAddress?: string; // Dirección de retiro
+  menuItems?: MenuItem[]; // Items del menú principal
   announcementBar: {
     enabled: boolean;
     messages: string[];
@@ -22,8 +30,12 @@ export interface AppSettings {
 const defaultSettings: AppSettings = {
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '1234567890',
   logo: '',
+  favicon: '',
   primaryColor: '#0284c7',
   minimumPurchase: 0, // 0 significa sin mínimo
+  menuItems: [
+    { id: '1', label: 'Catálogo', url: '/' }
+  ],
   announcementBar: {
     enabled: false,
     messages: [],

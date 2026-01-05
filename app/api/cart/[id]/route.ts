@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { getSharedCartById } from '@/lib/sharedCarts'
 import { getProducts } from '@/lib/products'
 
+// Forzar que esta ruta sea dinámica y no se cachee
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }

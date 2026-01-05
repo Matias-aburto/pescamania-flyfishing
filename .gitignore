@@ -42,4 +42,5 @@ next-env.d.ts
 # datos locales (backup/fallback - no versionar)
 data/shared-carts.json
 data/settings.json
+data/products.json
 

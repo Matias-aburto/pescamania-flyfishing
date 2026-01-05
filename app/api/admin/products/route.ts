@@ -9,7 +9,7 @@ import { Product } from '@/types/product'
 
 export async function GET() {
   try {
-    const products = getProducts()
+    const products = await getProducts()
     return NextResponse.json(products)
   } catch (error) {
     return NextResponse.json(
@@ -22,7 +22,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const product = createProduct(body)
+    const product = await createProduct(body)
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
     return NextResponse.json(
@@ -36,7 +36,7 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json()
     const { id, ...updates } = body
-    const product = updateProduct(id, updates)
+    const product = await updateProduct(id, updates)
     if (!product) {
       return NextResponse.json(
         { error: 'Producto no encontrado' },
@@ -62,7 +62,7 @@ export async function DELETE(request: Request) {
         { status: 400 }
       )
     }
-    const deleted = deleteProduct(id)
+    const deleted = await deleteProduct(id)
     if (!deleted) {
       return NextResponse.json(
         { error: 'Producto no encontrado' },

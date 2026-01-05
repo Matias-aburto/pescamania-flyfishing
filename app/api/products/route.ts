@@ -3,7 +3,7 @@ import { getProducts } from '@/lib/products'
 
 export async function GET() {
   try {
-    const products = getProducts()
+    const products = await getProducts()
     return NextResponse.json(products)
   } catch (error) {
     return NextResponse.json(

@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const product = getProductBySlug(params.slug)
+    const product = await getProductBySlug(params.slug)
     if (!product) {
       return NextResponse.json(
         { error: 'Producto no encontrado' },

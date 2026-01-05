@@ -95,10 +95,16 @@ export async function PUT(request: Request) {
     saveSettings(settings)
     return NextResponse.json(settings)
   } catch (error) {
+    console.error('Error saving settings:', error)
     return NextResponse.json(
-      { error: 'Error al guardar configuración' },
+      { error: 'Error al guardar configuración', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
+}
+
+// También exportar POST como alternativa (algunos servidores pueden requerirlo)
+export async function POST(request: Request) {
+  return PUT(request)
 }
 

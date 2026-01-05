@@ -95,18 +95,26 @@ function SettingsPageContent() {
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
         body: JSON.stringify(settings),
       })
+      
+      const data = await res.json()
+      
       if (res.ok) {
         alert('Configuración guardada exitosamente')
         // Recargar la página para aplicar cambios
         window.location.reload()
       } else {
-        alert('Error al guardar la configuración')
+        console.error('Error response:', data)
+        alert(data.error || 'Error al guardar la configuración')
       }
     } catch (error) {
-      alert('Error al guardar la configuración')
+      console.error('Error al guardar configuración:', error)
+      alert('Error al guardar la configuración. Por favor, intenta nuevamente.')
     } finally {
       setSaving(false)
     }

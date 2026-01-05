@@ -56,7 +56,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
 
     // Escuchar cambios en la autenticación
     const supabase = getSupabaseClient()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
       if (event === 'SIGNED_OUT' || !session) {
         router.push('/admin/login')
       }

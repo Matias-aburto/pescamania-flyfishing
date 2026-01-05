@@ -49,8 +49,12 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('Error al compartir carrito:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
     return NextResponse.json(
-      { error: 'Error al compartir el carrito' },
+      { 
+        error: 'Error al compartir el carrito',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }

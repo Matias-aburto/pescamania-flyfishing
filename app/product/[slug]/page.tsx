@@ -23,7 +23,15 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (params.slug) {
-      fetch(`/api/products/slug/${params.slug}`)
+      // Agregar timestamp para evitar caché del fetch
+      const timestamp = Date.now()
+      fetch(`/api/products/slug/${params.slug}?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      })
         .then(res => res.json())
         .then(data => {
           setProduct(data)
@@ -51,6 +59,9 @@ export default function ProductDetailPage() {
   
   // Agregar versión para evitar caché
   const currentImage = getImageUrl(baseImage, product?.updatedAt) || PLACEHOLDER_IMAGE
+
+  // Key única para forzar re-render cuando cambia la imagen o variante
+  const imageKey = `${product?.updatedAt || ''}-${selectedVariant?.id || 'no-variant'}`
 
   // Obtener precio actual (variante seleccionada o producto)
   const currentPrice = selectedVariant?.price ?? product?.price ?? 0
@@ -102,6 +113,7 @@ export default function ProductDetailPage() {
           className="relative aspect-square bg-gray-200 rounded-lg overflow-hidden"
         >
           <img
+            key={imageKey}
             src={currentImage}
             alt={product.name}
             className="w-full h-full object-cover"

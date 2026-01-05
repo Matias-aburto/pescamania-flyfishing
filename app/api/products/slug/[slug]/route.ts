@@ -13,7 +13,14 @@ export async function GET(
         { status: 404 }
       )
     }
-    return NextResponse.json(product)
+    // Agregar headers para evitar caché
+    return NextResponse.json(product, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    })
   } catch (error) {
     return NextResponse.json(
       { error: 'Error al obtener producto' },

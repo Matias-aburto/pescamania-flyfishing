@@ -190,7 +190,7 @@ export default function ProductDetailPage() {
                 >
                   -
                 </button>
-                <span className="text-lg font-semibold w-12 text-center">
+                <span className="text-lg font-semibold w-12 text-center text-gray-900">
                   {quantity}
                 </span>
                 <button

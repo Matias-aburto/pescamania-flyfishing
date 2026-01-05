@@ -64,7 +64,7 @@ export default function Pagination({
       {getPageNumbers().map((page, index) => (
         <div key={index}>
           {page === '...' ? (
-            <span className="px-3 py-2">...</span>
+            <span className="px-3 py-2 text-gray-600">...</span>
           ) : (
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -73,7 +73,7 @@ export default function Pagination({
               className={`px-4 py-2 rounded-lg border transition-colors ${
                 currentPage === page
                   ? 'bg-primary-600 text-white border-primary-600'
-                  : 'border-gray-300 hover:bg-gray-100'
+                  : 'border-gray-300 hover:bg-gray-100 text-gray-900'
               }`}
             >
               {page}

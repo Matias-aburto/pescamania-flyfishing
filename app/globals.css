@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      #eff6ff,
+      #ffffff
+    );
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Variables CSS para el color principal dinámico */
+:root {
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-200: #bae6fd;
+}
+
+/* Clases utilitarias para usar el color dinámico */
+.bg-primary-600 {
+  background-color: var(--color-primary-600) !important;
+}
+
+.bg-primary-700 {
+  background-color: var(--color-primary-700) !important;
+}
+
+.bg-primary-200 {
+  background-color: var(--color-primary-200) !important;
+}
+
+.text-primary-600 {
+  color: var(--color-primary-600) !important;
+}
+
+.border-primary-600 {
+  border-color: var(--color-primary-600) !important;
+}
+
+.ring-primary-200 {
+  --tw-ring-color: var(--color-primary-200) !important;
+}
+
+.hover\:bg-primary-700:hover {
+  background-color: var(--color-primary-700) !important;
+}
+
+.hover\:text-primary-600:hover {
+  color: var(--color-primary-600) !important;
+}
+

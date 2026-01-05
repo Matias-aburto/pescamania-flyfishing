@@ -1,0 +1,19 @@
+{
+  "whatsappNumber": "56996867047",
+  "logo": "/images/products/1767452161248-Pescamania__2_.png",
+  "primaryColor": "#070066",
+  "minimumPurchase": 10000,
+  "pickupAddress": "Galvarino 900, Loncoche",
+  "announcementBar": {
+    "enabled": true,
+    "messages": [
+      "Envío gratis por compras sobre $50.000 🐟",
+      "Pedido mínimo $10.000 💸💸💸",
+      "Envíos a todo Chile 🚚"
+    ],
+    "position": "top",
+    "backgroundColor": "#0d27e7",
+    "textColor": "#ffffff",
+    "rotationInterval": 5
+  }
+}

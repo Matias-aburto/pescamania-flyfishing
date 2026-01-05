@@ -21,38 +21,42 @@ export default function Navbar({ initialSettings }: NavbarProps) {
     setMounted(true)
     
     const loadSettings = () => {
-      // Usar valores iniciales del window si están disponibles
-      if ((window as any).__APP_SETTINGS__) {
-        const windowSettings = (window as any).__APP_SETTINGS__
-        // Migrar formato antiguo si existe
-        if (windowSettings.announcementBar?.message && !windowSettings.announcementBar?.messages) {
-          windowSettings.announcementBar.messages = [windowSettings.announcementBar.message]
-          delete windowSettings.announcementBar.message
-        }
-        setSettings(windowSettings)
-      } else if (initialSettings) {
+      // Siempre hacer fetch para evitar problemas de caché, especialmente en páginas compartidas
+      // Usar valores iniciales solo como fallback temporal mientras carga
+      if (initialSettings) {
         setSettings(initialSettings)
-      } else {
-        // Solo hacer fetch si no tenemos valores iniciales
-        fetch('/api/admin/settings', {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache',
-          },
-        })
-          .then(res => res.json())
-          .then(data => {
-            // Migrar formato antiguo si existe
-            if (data.announcementBar?.message && !data.announcementBar?.messages) {
-              data.announcementBar.messages = [data.announcementBar.message]
-              delete data.announcementBar.message
-            }
-            setSettings(data)
-            // Actualizar window.__APP_SETTINGS__ para que otros componentes lo usen
-            ;(window as any).__APP_SETTINGS__ = data
-          })
-          .catch(() => {})
       }
+      
+      // Siempre hacer fetch para obtener los valores más recientes
+      fetch('/api/admin/settings', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          // Migrar formato antiguo si existe
+          if (data.announcementBar?.message && !data.announcementBar?.messages) {
+            data.announcementBar.messages = [data.announcementBar.message]
+            delete data.announcementBar.message
+          }
+          setSettings(data)
+          // Actualizar window.__APP_SETTINGS__ para que otros componentes lo usen
+          ;(window as any).__APP_SETTINGS__ = data
+        })
+        .catch(() => {
+          // Si falla el fetch, usar valores iniciales o del window como último recurso
+          if ((window as any).__APP_SETTINGS__) {
+            const windowSettings = (window as any).__APP_SETTINGS__
+            if (windowSettings.announcementBar?.message && !windowSettings.announcementBar?.messages) {
+              windowSettings.announcementBar.messages = [windowSettings.announcementBar.message]
+              delete windowSettings.announcementBar.message
+            }
+            setSettings(windowSettings)
+          }
+        })
     }
 
     // Cargar settings inicialmente

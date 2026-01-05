@@ -247,9 +247,9 @@ export default function CartPage() {
                             onClick={() =>
                               updateQuantity(itemId, item.quantity - 1)
                             }
-                            className="p-2 hover:bg-gray-100 transition-colors"
+                            className="p-2 hover:bg-gray-100 transition-colors text-gray-700"
                           >
-                            <Minus size={16} />
+                            <Minus size={16} className="text-gray-700" />
                           </button>
                           <span className="w-12 text-center font-semibold text-gray-900">
                             {item.quantity}
@@ -258,9 +258,9 @@ export default function CartPage() {
                             onClick={() =>
                               updateQuantity(itemId, item.quantity + 1)
                             }
-                            className="p-2 hover:bg-gray-100 transition-colors"
+                            className="p-2 hover:bg-gray-100 transition-colors text-gray-700"
                           >
-                            <Plus size={16} />
+                            <Plus size={16} className="text-gray-700" />
                           </button>
                         </div>
                         <p className="text-lg font-bold text-primary-600 ml-auto">

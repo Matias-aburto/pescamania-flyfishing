@@ -56,9 +56,9 @@ export default function Pagination({
         whileTap={{ scale: 0.9 }}
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+        className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 text-gray-700"
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={20} className="text-gray-700" />
       </motion.button>
 
       {getPageNumbers().map((page, index) => (
@@ -87,9 +87,9 @@ export default function Pagination({
         whileTap={{ scale: 0.9 }}
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+        className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 text-gray-700"
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={20} className="text-gray-700" />
       </motion.button>
     </div>
   )

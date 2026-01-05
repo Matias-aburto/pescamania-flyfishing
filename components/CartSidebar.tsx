@@ -219,9 +219,9 @@ export default function CartSidebar() {
                                 onClick={() =>
                                   updateQuantity(itemId, item.quantity - 1)
                                 }
-                                className="p-1 bg-white rounded border border-gray-300 hover:bg-gray-100"
+                                className="p-1 bg-white rounded border border-gray-300 hover:bg-gray-100 text-gray-700"
                               >
-                                <Minus size={16} />
+                                <Minus size={16} className="text-gray-700" />
                               </button>
                               <span className="w-8 text-center font-semibold text-gray-900">
                                 {item.quantity}
@@ -230,9 +230,9 @@ export default function CartSidebar() {
                                 onClick={() =>
                                   updateQuantity(itemId, item.quantity + 1)
                                 }
-                                className="p-1 bg-white rounded border border-gray-300 hover:bg-gray-100"
+                                className="p-1 bg-white rounded border border-gray-300 hover:bg-gray-100 text-gray-700"
                               >
-                                <Plus size={16} />
+                                <Plus size={16} className="text-gray-700" />
                               </button>
                               <button
                                 onClick={() => removeItem(itemId)}

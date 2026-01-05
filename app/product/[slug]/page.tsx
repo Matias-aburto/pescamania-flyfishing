@@ -186,7 +186,7 @@ export default function ProductDetailPage() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-gray-700 font-semibold text-lg"
                 >
                   -
                 </button>
@@ -195,7 +195,7 @@ export default function ProductDetailPage() {
                 </span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-gray-700 font-semibold text-lg"
                 >
                   +
                 </button>

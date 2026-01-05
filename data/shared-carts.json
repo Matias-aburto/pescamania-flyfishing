@@ -1156,5 +1156,79 @@
     "deliveryType": null,
     "createdAt": "2026-01-05T12:52:11.192Z",
     "expiresAt": "2026-02-04T12:52:11.192Z"
+  },
+  {
+    "id": "mk18gbcbo2w6nqb69f",
+    "items": [
+      {
+        "product": {
+          "name": "Brassie",
+          "description": "",
+          "price": 1800,
+          "image": "/images/products/1767417906595-hq720.jpg",
+          "category": "Ninfas",
+          "tags": [],
+          "variants": [],
+          "id": "1767417907636",
+          "createdAt": "2026-01-03T05:25:07.636Z",
+          "updatedAt": "2026-01-03T05:25:07.636Z",
+          "slug": "brassie"
+        },
+        "quantity": 1
+      },
+      {
+        "product": {
+          "name": "Copper John",
+          "description": "",
+          "price": 1800,
+          "image": "/images/products/1767417867058-copper-john-nymph-fly3192.jpg",
+          "category": "Ninfas",
+          "tags": [],
+          "variants": [],
+          "id": "1767417868319",
+          "createdAt": "2026-01-03T05:24:28.319Z",
+          "updatedAt": "2026-01-03T05:24:28.319Z",
+          "slug": "copper-john"
+        },
+        "quantity": 1
+      },
+      {
+        "product": {
+          "name": "Perdigon Orange",
+          "description": "",
+          "price": 1800,
+          "image": "/images/products/1767412425448-45p1rwbof3a81.jpg",
+          "category": "Perdigones",
+          "tags": [],
+          "variants": [],
+          "id": "1767412426627",
+          "createdAt": "2026-01-03T03:53:46.627Z",
+          "updatedAt": "2026-01-03T05:20:28.873Z",
+          "slug": "perdigon-orange"
+        },
+        "quantity": 5
+      },
+      {
+        "product": {
+          "name": "San Juan",
+          "description": "",
+          "price": 1800,
+          "image": "/images/products/1767449619802-WhatsApp_Image_2026-01-03_at_10.51.17_AM.jpeg",
+          "category": "Secas",
+          "tags": [],
+          "variants": [],
+          "slug": "san-juan",
+          "id": "1767449620969",
+          "createdAt": "2026-01-03T14:13:40.969Z",
+          "updatedAt": "2026-01-03T14:13:40.969Z"
+        },
+        "quantity": 1
+      }
+    ],
+    "deliveryType": "envio",
+    "comuna": "San Fernando",
+    "customerName": "Luis",
+    "createdAt": "2026-01-05T14:05:21.131Z",
+    "expiresAt": "2026-02-04T14:05:21.131Z"
   }
 ]

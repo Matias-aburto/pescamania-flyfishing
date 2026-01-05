@@ -1,51 +1,54 @@
 import { SharedCart } from '@/types/cart';
+import { getSupabaseAdmin } from './supabase';
 import fs from 'fs';
 import path from 'path';
 
-// Almacenamiento en memoria para producción (Vercel/serverless)
-// En desarrollo local, también intenta usar el sistema de archivos
+// Fallback: almacenamiento en memoria para cuando Supabase no está configurado
 const inMemoryCarts = new Map<string, SharedCart>();
-
 const sharedCartsFilePath = path.join(process.cwd(), 'data', 'shared-carts.json');
 
-function isReadOnlyFileSystem(): boolean {
-  // En Vercel/serverless, el sistema de archivos es de solo lectura
-  // Detectar Vercel o cualquier entorno serverless
-  try {
-    if (typeof process !== 'undefined') {
-      // Vercel establece esta variable de entorno
-      if (process.env.VERCEL || process.env.VERCEL_ENV) {
-        return true;
-      }
-      // También verificar si estamos en producción y no en desarrollo local
-      if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_FRONTEND_URL?.includes('localhost')) {
-        // En producción, asumir que es serverless (solo lectura)
-        return true;
-      }
-    }
-    // En desarrollo local, intentar escribir un archivo temporal para verificar
-    const testPath = path.join(process.cwd(), 'data', '.test-write');
-    try {
-      fs.writeFileSync(testPath, 'test');
-      fs.unlinkSync(testPath);
-      return false;
-    } catch {
-      return true;
-    }
-  } catch {
-    return true;
-  }
+// Verificar si Supabase está configurado
+function isSupabaseConfigured(): boolean {
+  return !!(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY) // Soporta nueva y legacy
+  );
 }
 
-const isReadOnly = isReadOnlyFileSystem();
+// Obtener todos los carritos compartidos
+export async function getSharedCarts(): Promise<SharedCart[]> {
+  // Prioridad 1: Supabase (si está configurado)
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseAdmin();
+      const { data, error } = await supabase
+        .from('shared_carts')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-export function getSharedCarts(): SharedCart[] {
-  if (isReadOnly) {
-    // Usar almacenamiento en memoria
-    return Array.from(inMemoryCarts.values());
+      if (error) {
+        console.error('Error fetching shared carts from Supabase:', error);
+        return [];
+      }
+
+      // Convertir los datos de Supabase al formato SharedCart
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        items: row.items,
+        deliveryType: row.delivery_type,
+        comuna: row.comuna,
+        customerName: row.customer_name,
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+      }));
+    } catch (error) {
+      console.error('Error connecting to Supabase:', error);
+      // Fallback a memoria si Supabase falla
+      return Array.from(inMemoryCarts.values());
+    }
   }
-  
-  // Intentar leer del sistema de archivos
+
+  // Fallback 2: Sistema de archivos (solo en desarrollo local)
   try {
     if (fs.existsSync(sharedCartsFilePath)) {
       const fileContents = fs.readFileSync(sharedCartsFilePath, 'utf8');
@@ -54,37 +57,117 @@ export function getSharedCarts(): SharedCart[] {
   } catch (error) {
     console.error('Error reading shared carts file:', error);
   }
-  return [];
+
+  // Fallback 3: Memoria
+  return Array.from(inMemoryCarts.values());
 }
 
-export function getSharedCartById(id: string): SharedCart | null {
-  if (isReadOnly) {
-    // Usar almacenamiento en memoria
-    return inMemoryCarts.get(id) || null;
+// Obtener un carrito compartido por ID
+export async function getSharedCartById(id: string): Promise<SharedCart | null> {
+  // Prioridad 1: Supabase (si está configurado)
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseAdmin();
+      const { data, error } = await supabase
+        .from('shared_carts')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No encontrado
+          return null;
+        }
+        console.error('Error fetching shared cart from Supabase:', error);
+        return null;
+      }
+
+      if (!data) return null;
+
+      // Verificar si está expirado
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        // Eliminar carrito expirado
+        await supabase.from('shared_carts').delete().eq('id', id);
+        return null;
+      }
+
+      // Convertir al formato SharedCart
+      return {
+        id: data.id,
+        items: data.items,
+        deliveryType: data.delivery_type,
+        comuna: data.comuna,
+        customerName: data.customer_name,
+        createdAt: data.created_at,
+        expiresAt: data.expires_at,
+      };
+    } catch (error) {
+      console.error('Error connecting to Supabase:', error);
+      // Fallback a memoria
+      return inMemoryCarts.get(id) || null;
+    }
   }
-  
-  const carts = getSharedCarts();
+
+  // Fallback: buscar en memoria o archivos
+  const carts = await getSharedCarts();
   return carts.find(cart => cart.id === id) || null;
 }
 
-export function saveSharedCart(cart: SharedCart): void {
-  if (isReadOnly) {
-    // Usar almacenamiento en memoria
-    inMemoryCarts.set(cart.id, cart);
-    
-    // Limpiar carritos expirados periódicamente
-    const now = new Date();
-    inMemoryCarts.forEach((storedCart, id) => {
-      if (storedCart.expiresAt && new Date(storedCart.expiresAt) < now) {
-        inMemoryCarts.delete(id);
+// Guardar un carrito compartido
+export async function saveSharedCart(cart: SharedCart): Promise<void> {
+  // Prioridad 1: Supabase (si está configurado)
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseAdmin();
+      const { error } = await supabase
+        .from('shared_carts')
+        .insert({
+          id: cart.id,
+          items: cart.items,
+          delivery_type: cart.deliveryType,
+          comuna: cart.comuna,
+          customer_name: cart.customerName,
+          created_at: cart.createdAt,
+          expires_at: cart.expiresAt,
+        });
+
+      if (error) {
+        console.error('Error saving shared cart to Supabase:', error);
+        // Si es un error de duplicado, intentar actualizar en lugar de insertar
+        if (error.code === '23505') { // Violación de clave única
+          const { error: updateError } = await supabase
+            .from('shared_carts')
+            .update({
+              items: cart.items,
+              delivery_type: cart.deliveryType,
+              comuna: cart.comuna,
+              customer_name: cart.customerName,
+              expires_at: cart.expiresAt,
+            })
+            .eq('id', cart.id);
+          
+          if (updateError) {
+            console.error('Error updating shared cart in Supabase:', updateError);
+            throw new Error('Failed to save cart to database');
+          }
+          return;
+        }
+        throw new Error('Failed to save cart to database');
       }
-    });
-    return;
+      // Éxito: carrito guardado en Supabase (persistente)
+      return;
+    } catch (error) {
+      console.error('Error connecting to Supabase:', error);
+      // ⚠️ IMPORTANTE: Si Supabase falla, lanzamos el error en lugar de usar memoria
+      // Esto asegura que el usuario sepa que hay un problema y no pierda datos
+      throw new Error('No se pudo guardar el carrito. Por favor, intenta nuevamente.');
+    }
   }
-  
-  // Intentar guardar en el sistema de archivos
+
+  // Fallback 2: Sistema de archivos (solo en desarrollo local)
   try {
-    const carts = getSharedCarts();
+    const carts = await getSharedCarts();
     carts.push(cart);
     const dir = path.dirname(sharedCartsFilePath);
     if (!fs.existsSync(dir)) {
@@ -93,11 +176,12 @@ export function saveSharedCart(cart: SharedCart): void {
     fs.writeFileSync(sharedCartsFilePath, JSON.stringify(carts, null, 2));
   } catch (error) {
     console.error('Error writing shared carts file, falling back to memory:', error);
-    // Fallback a memoria si falla la escritura
+    // Fallback 3: Memoria
     inMemoryCarts.set(cart.id, cart);
   }
 }
 
+// Generar un ID único para el carrito
 export function generateCartId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }

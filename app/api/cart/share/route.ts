@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 días
     }
 
-    saveSharedCart(sharedCart)
+    await saveSharedCart(sharedCart)
 
     // Obtener la URL base del frontend desde variable de entorno o del request
     const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.FRONTEND_URL

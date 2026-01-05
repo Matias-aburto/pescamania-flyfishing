@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cart = getSharedCartById(params.id)
+    const cart = await getSharedCartById(params.id)
     
     if (!cart) {
       return NextResponse.json(

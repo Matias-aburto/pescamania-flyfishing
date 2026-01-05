@@ -6,7 +6,6 @@ import CartSidebar from '@/components/CartSidebar'
 import AnnouncementBar from '@/components/AnnouncementBar'
 import MainContent from '@/components/MainContent'
 import ThemeProvider from '@/components/ThemeProvider'
-import FaviconUpdater from '@/components/FaviconUpdater'
 import { getSettings } from '@/lib/settings'
 
 const poppins = Poppins({ 

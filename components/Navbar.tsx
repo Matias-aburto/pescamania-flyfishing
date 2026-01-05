@@ -13,7 +13,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ initialSettings }: NavbarProps) {
-  const { getTotalItems, openCart, items } = useCartStore()
+  const { getTotalItems, openCart } = useCartStore()
   const [mounted, setMounted] = useState(false)
   const [settings, setSettings] = useState<AppSettings | null>(initialSettings || null)
 

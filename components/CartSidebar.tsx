@@ -3,7 +3,6 @@
 import { useCartStore } from '@/store/cartStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, MessageCircle, ShoppingCart, Plus, Minus, Trash2, AlertCircle } from 'lucide-react'
-import { WHATSAPP_NUMBER } from '@/config/constants'
 import { PLACEHOLDER_IMAGE } from '@/lib/constants'
 import { formatPrice } from '@/lib/formatPrice'
 import { useState, useEffect } from 'react'
@@ -33,7 +32,7 @@ export default function CartSidebar() {
     getTotalPrice,
     getItemId,
   } = useCartStore()
-  const [whatsappNumber, setWhatsappNumber] = useState<string>(WHATSAPP_NUMBER)
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('')
   const [sharing, setSharing] = useState(false)
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [mounted, setMounted] = useState(false)

@@ -36,11 +36,6 @@ export function getProducts(): Product[] {
   }
 }
 
-export function getProductById(id: string): Product | null {
-  const products = getProducts();
-  return products.find(p => p.id === id) || null;
-}
-
 export function getProductBySlug(slug: string): Product | null {
   const products = getProducts();
   return products.find(p => p.slug === slug) || null;
@@ -105,11 +100,5 @@ export function getCategories(): string[] {
   const products = getProducts();
   const categories = new Set(products.map(p => p.category));
   return Array.from(categories).sort();
-}
-
-export function getTags(): string[] {
-  const products = getProducts();
-  const allTags = products.flatMap(p => p.tags);
-  return Array.from(new Set(allTags)).sort();
 }
 

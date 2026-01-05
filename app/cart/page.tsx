@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Plus, Minus, Trash2, ArrowLeft, Share2, MessageCircle, Copy, Check, Package, Truck, Search, AlertCircle, MapPin } from 'lucide-react'
 import { PLACEHOLDER_IMAGE } from '@/lib/constants'
 import { formatPrice } from '@/lib/formatPrice'
+import { getImageUrl } from '@/lib/imageCache'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { chileComunas } from '@/lib/chileComunas'
@@ -201,7 +202,8 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-4">
             {items.map((item, index) => {
               const itemId = getItemId(item.product, item.variant)
-              const itemImage = item.variant?.image || item.product.image
+              const baseImage = item.variant?.image || item.product.image
+              const itemImage = getImageUrl(baseImage, item.product.updatedAt) || PLACEHOLDER_IMAGE
               const itemPrice = item.variant?.price ?? item.product.price
               return (
                 <motion.div
@@ -214,7 +216,7 @@ export default function CartPage() {
                   <div className="flex gap-4">
                     <div className="relative w-24 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                       <img
-                        src={itemImage || PLACEHOLDER_IMAGE}
+                        src={itemImage}
                         alt={item.product.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {

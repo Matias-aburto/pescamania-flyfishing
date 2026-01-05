@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, MessageCircle, ShoppingCart, Plus, Minus, Trash2, AlertCircle } from 'lucide-react'
 import { PLACEHOLDER_IMAGE } from '@/lib/constants'
 import { formatPrice } from '@/lib/formatPrice'
+import { getImageUrl } from '@/lib/imageCache'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -175,7 +176,8 @@ export default function CartSidebar() {
                 <div className="space-y-4">
                   {items.map(item => {
                     const itemId = getItemId(item.product, item.variant)
-                    const itemImage = item.variant?.image || item.product.image
+                    const baseImage = item.variant?.image || item.product.image
+                    const itemImage = getImageUrl(baseImage, item.product.updatedAt) || PLACEHOLDER_IMAGE
                     const itemPrice = item.variant?.price ?? item.product.price
                     return (
                       <motion.div
@@ -187,7 +189,7 @@ export default function CartSidebar() {
                         <div className="flex gap-4">
                           <div className="relative w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                             <img
-                              src={itemImage || PLACEHOLDER_IMAGE}
+                              src={itemImage}
                               alt={item.product.name}
                               className="w-full h-full object-cover"
                               onError={(e) => {

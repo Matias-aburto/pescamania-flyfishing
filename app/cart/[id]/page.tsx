@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { CartItem } from '@/types/product'
 import { formatPrice } from '@/lib/formatPrice'
 import { PLACEHOLDER_IMAGE } from '@/lib/constants'
+import { getImageUrl } from '@/lib/imageCache'
 import { ShoppingCart, ArrowLeft, Share2, Copy, Check, Package, Truck } from 'lucide-react'
 import Link from 'next/link'
 
@@ -177,7 +178,8 @@ export default function SharedCartPage() {
           <div className="space-y-4">
             {cart.items.map((item) => {
               const itemPrice = item.variant?.price ?? item.product.price
-              const itemImage = item.variant?.image || item.product.image
+              const baseImage = item.variant?.image || item.product.image
+              const itemImage = getImageUrl(baseImage, item.product.updatedAt) || PLACEHOLDER_IMAGE
               return (
                 <div
                   key={`${item.product.id}-${item.variant?.id || 'no-variant'}`}
@@ -185,7 +187,7 @@ export default function SharedCartPage() {
                 >
                   <div className="relative w-24 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                     <img
-                      src={itemImage || PLACEHOLDER_IMAGE}
+                      src={itemImage}
                       alt={item.product.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {

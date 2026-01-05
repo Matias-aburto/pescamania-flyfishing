@@ -7,6 +7,7 @@ import { Product, ProductVariant } from '@/types/product'
 import { useCartStore } from '@/store/cartStore'
 import { ShoppingCart, ArrowLeft, Tag } from 'lucide-react'
 import { PLACEHOLDER_IMAGE } from '@/lib/constants'
+import { getImageUrl } from '@/lib/imageCache'
 import { formatPrice } from '@/lib/formatPrice'
 // import Image from 'next/image'
 
@@ -44,9 +45,12 @@ export default function ProductDetailPage() {
   }
 
   // Obtener imagen actual (variante seleccionada, primera variante, o imagen del producto)
-  const currentImage = selectedVariant?.image || 
+  const baseImage = selectedVariant?.image || 
     (product?.variants && product.variants.length > 0 ? product.variants[0].image : null) ||
     product?.image
+  
+  // Agregar versión para evitar caché
+  const currentImage = getImageUrl(baseImage, product?.updatedAt) || PLACEHOLDER_IMAGE
 
   // Obtener precio actual (variante seleccionada o producto)
   const currentPrice = selectedVariant?.price ?? product?.price ?? 0
@@ -98,7 +102,7 @@ export default function ProductDetailPage() {
           className="relative aspect-square bg-gray-200 rounded-lg overflow-hidden"
         >
           <img
-            src={currentImage || PLACEHOLDER_IMAGE}
+            src={currentImage}
             alt={product.name}
             className="w-full h-full object-cover"
             onError={(e) => {

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ShoppingCart, Eye } from 'lucide-react'
 import { PLACEHOLDER_IMAGE } from '@/lib/constants'
 import { formatPrice } from '@/lib/formatPrice'
+import { getImageUrl } from '@/lib/imageCache'
 // import Image from 'next/image'
 
 interface ProductCardProps {
@@ -26,6 +27,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? product.variants[0].image
     : product.image
 
+  // Agregar versión para evitar caché
+  const imageUrl = getImageUrl(mainImage, product.updatedAt) || PLACEHOLDER_IMAGE
+
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -34,7 +38,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Link href={`/product/${product.slug}`}>
         <div className="relative h-40 sm:h-48 bg-gray-200 flex-shrink-0">
           <img
-            src={mainImage || PLACEHOLDER_IMAGE}
+            src={imageUrl}
             alt={product.name}
             className="w-full h-full object-cover"
             onError={(e) => {

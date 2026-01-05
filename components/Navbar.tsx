@@ -123,12 +123,6 @@ export default function Navbar() {
                 >
                   Catálogo
                 </Link>
-                <Link
-                  href="/admin"
-                  className="text-gray-700 hover:text-primary-600 transition-colors"
-                >
-                  Administración
-                </Link>
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}

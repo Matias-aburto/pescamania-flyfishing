@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Save, Upload, X, ArrowLeft, Settings, MessageCircle, Image as ImageIcon, Megaphone, Plus, Trash2, Palette, ShoppingBag, Package } from 'lucide-react'
+import { Save, Upload, X, ArrowLeft, Settings, MessageCircle, Image as ImageIcon, Megaphone, Plus, Trash2, Palette, ShoppingBag, Package, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { PLACEHOLDER_IMAGE } from '@/lib/constants'
 import { formatPrice } from '@/lib/formatPrice'
@@ -23,7 +23,19 @@ interface AppSettings {
   }
 }
 
-export default function SettingsPage() {
+import AdminGuard from '@/components/AdminGuard'
+import { useRouter } from 'next/navigation'
+import { getSupabaseClient } from '@/lib/supabase'
+
+function SettingsPageContent() {
+  const router = useRouter()
+  
+  const handleLogout = async () => {
+    const supabase = getSupabaseClient()
+    await supabase.auth.signOut()
+    router.push('/admin/login')
+  }
+
   const [settings, setSettings] = useState<AppSettings>({
     whatsappNumber: '',
     logo: '',
@@ -134,13 +146,24 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link
-        href="/admin"
-        className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
-      >
-        <ArrowLeft size={20} />
-        Volver a Administración
-      </Link>
+      <div className="mb-6 flex items-center gap-3">
+        <Link
+          href="/admin"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          <ArrowLeft size={20} />
+          Volver a Administración
+        </Link>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+        >
+          <LogOut size={20} />
+          Cerrar sesión
+        </motion.button>
+      </div>
 
       <div className="max-w-2xl mx-auto">
         <motion.div
@@ -735,6 +758,14 @@ export default function SettingsPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <AdminGuard>
+      <SettingsPageContent />
+    </AdminGuard>
   )
 }
 

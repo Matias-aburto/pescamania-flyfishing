@@ -3,12 +3,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Product, ProductVariant } from '@/types/product'
-import { Plus, Edit, Trash2, X, Save, Upload, Image as ImageIcon, Settings } from 'lucide-react'
+import { Plus, Edit, Trash2, X, Save, Upload, Image as ImageIcon, Settings, LogOut } from 'lucide-react'
 import { PLACEHOLDER_IMAGE, PRODUCT_CATEGORIES } from '@/lib/constants'
 import { formatPrice } from '@/lib/formatPrice'
 import Link from 'next/link'
+import AdminGuard from '@/components/AdminGuard'
+import { useRouter } from 'next/navigation'
+import { getSupabaseClient } from '@/lib/supabase'
 
-export default function AdminPage() {
+function AdminPageContent() {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -234,6 +238,12 @@ export default function AdminPage() {
     }
   }, [formData.image])
 
+  const handleLogout = async () => {
+    const supabase = getSupabaseClient()
+    await supabase.auth.signOut()
+    router.push('/admin/login')
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
@@ -248,6 +258,15 @@ export default function AdminPage() {
             <Settings size={20} />
             Configuración
           </Link>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+          >
+            <LogOut size={20} />
+            Cerrar sesión
+          </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -652,6 +671,14 @@ export default function AdminPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <AdminGuard>
+      <AdminPageContent />
+    </AdminGuard>
   )
 }
 

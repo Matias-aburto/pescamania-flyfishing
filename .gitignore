@@ -39,3 +39,7 @@ next-env.d.ts
 # public/images/products/*
 # !public/images/products/.gitkeep
 
+# datos locales (backup/fallback - no versionar)
+data/shared-carts.json
+data/settings.json
+

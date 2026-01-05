@@ -6,6 +6,7 @@ import CartSidebar from '@/components/CartSidebar'
 import AnnouncementBar from '@/components/AnnouncementBar'
 import MainContent from '@/components/MainContent'
 import ThemeProvider from '@/components/ThemeProvider'
+import { Analytics } from '@vercel/analytics/next'
 import { getSettings } from '@/lib/settings'
 
 const poppins = Poppins({ 
@@ -87,6 +88,7 @@ export default async function RootLayout({
           <AnnouncementBar position="bottom" />
           <CartSidebar />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )

@@ -34,7 +34,15 @@ export default function SharedCartPage() {
 
   useEffect(() => {
     if (params.id) {
-      fetch(`/api/cart/${params.id}`)
+      // Agregar timestamp para evitar caché
+      const timestamp = Date.now()
+      fetch(`/api/cart/${params.id}?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      })
         .then(res => {
           if (!res.ok) {
             if (res.status === 404) {

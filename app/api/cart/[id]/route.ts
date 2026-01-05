@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSharedCartById } from '@/lib/sharedCarts'
+import { getProducts } from '@/lib/products'
 
 export async function GET(
   request: Request,
@@ -23,7 +24,35 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(cart)
+    // Sincronizar productos del carrito con datos actuales
+    const allProducts = await getProducts()
+    const productsMap = new Map(allProducts.map(p => [p.id, p]))
+    
+    // Actualizar productos en el carrito con datos frescos
+    const syncedItems = cart.items.map(item => {
+      const updatedProduct = productsMap.get(item.product.id)
+      if (updatedProduct) {
+        return {
+          ...item,
+          product: updatedProduct, // Reemplazar con producto actualizado
+        }
+      }
+      return item // Si no se encuentra, mantener el original
+    })
+
+    const syncedCart = {
+      ...cart,
+      items: syncedItems,
+    }
+
+    // Agregar headers para evitar caché
+    return NextResponse.json(syncedCart, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    })
   } catch (error) {
     return NextResponse.json(
       { error: 'Error al obtener el carrito' },

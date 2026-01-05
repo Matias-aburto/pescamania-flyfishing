@@ -32,7 +32,15 @@ export default function CartSidebar() {
     removeItem,
     getTotalPrice,
     getItemId,
+    syncProducts,
   } = useCartStore()
+  
+  // Sincronizar productos cuando se abre el carrito
+  useEffect(() => {
+    if (isOpen && items.length > 0) {
+      syncProducts()
+    }
+  }, [isOpen, syncProducts])
   const [whatsappNumber, setWhatsappNumber] = useState<string>('')
   const [sharing, setSharing] = useState(false)
   const [settings, setSettings] = useState<AppSettings | null>(null)

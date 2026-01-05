@@ -31,6 +31,7 @@ export default function CartPage() {
     setDeliveryType,
     setComuna,
     setCustomerName,
+    syncProducts,
   } = useCartStore()
   const [whatsappNumber, setWhatsappNumber] = useState<string>('')
   const [sharing, setSharing] = useState(false)
@@ -46,7 +47,11 @@ export default function CartPage() {
     setMounted(true)
     // Sincronizar nameInput con customerName del store
     setNameInput(customerName || '')
-  }, [customerName])
+    // Sincronizar productos del carrito con datos actuales
+    if (items.length > 0) {
+      syncProducts()
+    }
+  }, []) // Solo una vez al montar
 
   useEffect(() => {
     // Cargar configuración

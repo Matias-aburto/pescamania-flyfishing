@@ -288,7 +288,16 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
       
       // Retornar el producto actualizado desde Supabase (con updated_at actualizado)
       if (data) {
-        return fromSupabaseRow(data);
+        const syncedProduct = fromSupabaseRow(data);
+        // Log para diagnóstico
+        console.log('[updateProduct] Producto actualizado:', {
+          id: syncedProduct.id,
+          name: syncedProduct.name,
+          image: syncedProduct.image,
+          updatedAt: syncedProduct.updatedAt,
+          updatedAtTimestamp: new Date(syncedProduct.updatedAt).getTime(),
+        });
+        return syncedProduct;
       }
       
       return updatedProduct;

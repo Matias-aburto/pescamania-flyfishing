@@ -43,6 +43,7 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json()
     const { id, ...updates } = body
+    console.log('[API PUT /api/admin/products] Actualizando producto:', { id, updates })
     const product = await updateProduct(id, updates)
     if (!product) {
       return NextResponse.json(
@@ -50,8 +51,20 @@ export async function PUT(request: Request) {
         { status: 404 }
       )
     }
-    return NextResponse.json(product)
+    console.log('[API PUT /api/admin/products] Producto actualizado, retornando:', {
+      id: product.id,
+      image: product.image,
+      updatedAt: product.updatedAt,
+    })
+    return NextResponse.json(product, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    })
   } catch (error) {
+    console.error('[API PUT /api/admin/products] Error:', error)
     return NextResponse.json(
       { error: 'Error al actualizar producto' },
       { status: 500 }

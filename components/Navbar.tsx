@@ -20,18 +20,52 @@ export default function Navbar({ initialSettings }: NavbarProps) {
   useEffect(() => {
     setMounted(true)
     
-    // Usar valores iniciales del window si están disponibles
-    if ((window as any).__APP_SETTINGS__) {
-      const windowSettings = (window as any).__APP_SETTINGS__
-      // Migrar formato antiguo si existe
-      if (windowSettings.announcementBar?.message && !windowSettings.announcementBar?.messages) {
-        windowSettings.announcementBar.messages = [windowSettings.announcementBar.message]
-        delete windowSettings.announcementBar.message
+    const loadSettings = () => {
+      // Usar valores iniciales del window si están disponibles
+      if ((window as any).__APP_SETTINGS__) {
+        const windowSettings = (window as any).__APP_SETTINGS__
+        // Migrar formato antiguo si existe
+        if (windowSettings.announcementBar?.message && !windowSettings.announcementBar?.messages) {
+          windowSettings.announcementBar.messages = [windowSettings.announcementBar.message]
+          delete windowSettings.announcementBar.message
+        }
+        setSettings(windowSettings)
+      } else if (initialSettings) {
+        setSettings(initialSettings)
+      } else {
+        // Solo hacer fetch si no tenemos valores iniciales
+        fetch('/api/admin/settings', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        })
+          .then(res => res.json())
+          .then(data => {
+            // Migrar formato antiguo si existe
+            if (data.announcementBar?.message && !data.announcementBar?.messages) {
+              data.announcementBar.messages = [data.announcementBar.message]
+              delete data.announcementBar.message
+            }
+            setSettings(data)
+            // Actualizar window.__APP_SETTINGS__ para que otros componentes lo usen
+            ;(window as any).__APP_SETTINGS__ = data
+          })
+          .catch(() => {})
       }
-      setSettings(windowSettings)
-    } else if (!initialSettings) {
-      // Solo hacer fetch si no tenemos valores iniciales
-      fetch('/api/admin/settings')
+    }
+
+    // Cargar settings inicialmente
+    loadSettings()
+
+    // Escuchar eventos de actualización de settings
+    const handleSettingsUpdate = () => {
+      fetch('/api/admin/settings', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      })
         .then(res => res.json())
         .then(data => {
           // Migrar formato antiguo si existe
@@ -40,8 +74,25 @@ export default function Navbar({ initialSettings }: NavbarProps) {
             delete data.announcementBar.message
           }
           setSettings(data)
+          // Actualizar window.__APP_SETTINGS__
+          ;(window as any).__APP_SETTINGS__ = data
+          // Disparar evento para otros componentes
+          window.dispatchEvent(new CustomEvent('settingsUpdated'))
         })
         .catch(() => {})
+    }
+
+    // Escuchar evento personalizado cuando se actualizan los settings
+    window.addEventListener('settingsUpdated', handleSettingsUpdate)
+    
+    // También verificar periódicamente si hay cambios (cada 30 segundos)
+    const interval = setInterval(() => {
+      handleSettingsUpdate()
+    }, 30000)
+
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate)
+      clearInterval(interval)
     }
   }, [initialSettings])
 

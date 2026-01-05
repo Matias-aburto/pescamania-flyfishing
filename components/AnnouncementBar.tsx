@@ -27,17 +27,63 @@ export default function AnnouncementBar({ position }: AnnouncementBarProps) {
 
   useEffect(() => {
     setMounted(true)
-    fetch('/api/admin/settings')
-      .then(res => res.json())
-      .then(data => {
-        // Migrar formato antiguo si existe
-        if (data.announcementBar?.message && !data.announcementBar?.messages) {
-          data.announcementBar.messages = [data.announcementBar.message]
-          delete data.announcementBar.message
+    
+    const loadSettings = () => {
+      // Usar valores del window si están disponibles
+      if ((window as any).__APP_SETTINGS__) {
+        const windowSettings = (window as any).__APP_SETTINGS__
+        if (windowSettings.announcementBar?.message && !windowSettings.announcementBar?.messages) {
+          windowSettings.announcementBar.messages = [windowSettings.announcementBar.message]
+          delete windowSettings.announcementBar.message
         }
-        setSettings(data)
+        setSettings(windowSettings)
+      } else {
+        fetch('/api/admin/settings', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.announcementBar?.message && !data.announcementBar?.messages) {
+              data.announcementBar.messages = [data.announcementBar.message]
+              delete data.announcementBar.message
+            }
+            setSettings(data)
+            ;(window as any).__APP_SETTINGS__ = data
+          })
+          .catch(() => {})
+      }
+    }
+
+    loadSettings()
+
+    // Escuchar eventos de actualización
+    const handleSettingsUpdate = () => {
+      fetch('/api/admin/settings', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
       })
-      .catch(() => {})
+        .then(res => res.json())
+        .then(data => {
+          if (data.announcementBar?.message && !data.announcementBar?.messages) {
+            data.announcementBar.messages = [data.announcementBar.message]
+            delete data.announcementBar.message
+          }
+          setSettings(data)
+          ;(window as any).__APP_SETTINGS__ = data
+        })
+        .catch(() => {})
+    }
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate)
+
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate)
+    }
   }, [])
 
   // Rotación automática de mensajes

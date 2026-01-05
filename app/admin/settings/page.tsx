@@ -105,9 +105,19 @@ function SettingsPageContent() {
       const data = await res.json()
       
       if (res.ok) {
+        // Actualizar window.__APP_SETTINGS__ inmediatamente
+        ;(window as any).__APP_SETTINGS__ = data
+        
+        // Disparar evento para que otros componentes se actualicen
+        window.dispatchEvent(new CustomEvent('settingsUpdated'))
+        
         alert('Configuración guardada exitosamente')
-        // Recargar la página para aplicar cambios
-        window.location.reload()
+        
+        // Recargar solo la página de admin, no todas las páginas
+        // Esto permite que otras pestañas/páginas se actualicen automáticamente
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
       } else {
         console.error('Error response:', data)
         alert(data.error || 'Error al guardar la configuración')

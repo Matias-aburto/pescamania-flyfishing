@@ -54,22 +54,44 @@ http://localhost:3000
 └── data/              # Datos de productos (JSON)
 ```
 
-## Configuración de WhatsApp
+## Configuración de Variables de Entorno
 
-Para configurar el número de WhatsApp en el carrito, tienes dos opciones:
+Crea un archivo `.env.local` en la raíz del proyecto (o configura las variables en Vercel para producción):
 
-### Opción 1: Variable de entorno (recomendado)
-Crea un archivo `.env.local` en la raíz del proyecto:
+### Variables Requeridas
+
+#### `NEXT_PUBLIC_FRONTEND_URL` (Requerido para producción)
+URL del frontend para compartir carritos. **Es importante configurarlo en producción (Vercel)**.
+
+**Ejemplo para Vercel:**
+```
+NEXT_PUBLIC_FRONTEND_URL=https://pescamania-flyfishing-a41ovijct-matias-projects-224d9654.vercel.app
+```
+
+**Si tienes dominio personalizado:**
+```
+NEXT_PUBLIC_FRONTEND_URL=https://tudominio.com
+```
+
+**En desarrollo local:** No es necesario, se usará automáticamente `http://localhost:3000`
+
+### Variables Opcionales
+
+#### `NEXT_PUBLIC_WHATSAPP_NUMBER`
+Número de WhatsApp para compartir carritos. También se puede configurar desde el panel de administración.
+
 ```
 NEXT_PUBLIC_WHATSAPP_NUMBER=5491123456789
 ```
+
 Formato: código país + número sin espacios ni símbolos (ejemplo: 5491123456789 para Argentina)
 
-### Opción 2: Editar directamente
-Edita el archivo `config/constants.ts` y cambia el valor por defecto:
-```typescript
-export const WHATSAPP_NUMBER = '5491123456789' // Tu número de WhatsApp
-```
+### Configuración en Vercel
+
+1. Ve a tu proyecto en Vercel
+2. Settings → Environment Variables
+3. Agrega `NEXT_PUBLIC_FRONTEND_URL` con tu URL de producción
+4. Haz un nuevo deploy para que los cambios surtan efecto
 
 ## Panel de Administración
 

@@ -30,9 +30,18 @@ export async function POST(request: Request) {
 
     saveSharedCart(sharedCart)
 
-    // Obtener la URL base del request
-    const requestUrl = new URL(request.url)
-    const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
+    // Obtener la URL base del frontend desde variable de entorno o del request
+    const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.FRONTEND_URL
+    
+    let baseUrl: string
+    if (frontendUrl) {
+      // Usar la variable de entorno si está configurada
+      baseUrl = frontendUrl.replace(/\/$/, '') // Remover trailing slash si existe
+    } else {
+      // Fallback: usar la URL del request (para desarrollo local)
+      const requestUrl = new URL(request.url)
+      baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
+    }
     
     return NextResponse.json({ 
       id: cartId,

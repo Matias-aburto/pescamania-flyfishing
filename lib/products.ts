@@ -62,13 +62,20 @@ export async function getProducts(): Promise<Product[]> {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching products from Supabase:', error);
+        // Si la tabla no existe (PGRST205), es esperado antes de ejecutar migraciones
+        // Solo mostrar error si no es este caso específico
+        if (error.code !== 'PGRST205') {
+          console.error('Error fetching products from Supabase:', error);
+        }
         // Fallback a sistema de archivos o memoria
       } else if (data) {
         return data.map(fromSupabaseRow);
       }
     } catch (error) {
-      console.error('Error connecting to Supabase:', error);
+      // Solo mostrar error si no es un error de tabla no encontrada
+      if (error instanceof Error && !error.message.includes('Could not find the table')) {
+        console.error('Error connecting to Supabase:', error);
+      }
       // Fallback a sistema de archivos
     }
   }
@@ -80,10 +87,10 @@ export async function getProducts(): Promise<Product[]> {
       const products: Product[] = JSON.parse(fileContents);
       
       // Migración automática: agregar slugs a productos que no los tienen
-      let needsMigration = false
+      let needsSlugMigration = false
       const migratedProducts = products.map(product => {
         if (!product.slug) {
-          needsMigration = true
+          needsSlugMigration = true
           const baseSlug = generateSlug(product.name)
           const existingSlugs = products
             .filter(p => p.id !== product.id && p.slug)
@@ -94,14 +101,14 @@ export async function getProducts(): Promise<Product[]> {
         return product
       })
       
-      if (needsMigration) {
-        // Intentar guardar en Supabase si está configurado, sino en archivo
-        if (isSupabaseConfigured()) {
-          // Migrar a Supabase
-          migrateProductsToSupabase(migratedProducts).catch(console.error);
-        } else {
-          saveProductsToFile(migratedProducts);
-        }
+      // Guardar slugs si fue necesario
+      if (needsSlugMigration) {
+        saveProductsToFile(migratedProducts);
+      }
+      
+      // Intentar migrar a Supabase si está configurado (siempre, no solo cuando hay cambios de slugs)
+      if (isSupabaseConfigured()) {
+        migrateProductsToSupabase(migratedProducts).catch(console.error);
       }
       
       return migratedProducts
@@ -127,7 +134,10 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
       if (error) {
         if (error.code === 'PGRST116') return null;
-        console.error('Error fetching product from Supabase:', error);
+        // Si la tabla no existe (PGRST205), es esperado antes de ejecutar migraciones
+        if (error.code !== 'PGRST205') {
+          console.error('Error fetching product from Supabase:', error);
+        }
         // Fallback
       } else if (data) {
         return fromSupabaseRow(data);
@@ -181,7 +191,10 @@ async function migrateProductsToSupabase(products: Product[]): Promise<void> {
         .insert(productsToInsert);
 
       if (error) {
-        console.error('Error migrating products to Supabase:', error);
+        // Si la tabla no existe (PGRST205), es esperado antes de ejecutar migraciones
+        if (error.code !== 'PGRST205') {
+          console.error('Error migrating products to Supabase:', error);
+        }
       } else {
         console.log(`Migrated ${productsToInsert.length} products to Supabase`);
       }
@@ -316,9 +329,17 @@ export async function getCategories(): Promise<string[]> {
       if (!error && data) {
         const categories = new Set(data.map((row: any) => row.category));
         return Array.from(categories).sort() as string[];
+      } else if (error && error.code === 'PGRST205') {
+        // Tabla no existe, es esperado antes de ejecutar migraciones
+        // Fallback silencioso
+      } else if (error) {
+        console.error('Error fetching categories from Supabase:', error);
       }
     } catch (error) {
-      console.error('Error fetching categories from Supabase:', error);
+      // Solo mostrar error si no es un error de tabla no encontrada
+      if (error instanceof Error && !error.message.includes('Could not find the table')) {
+        console.error('Error fetching categories from Supabase:', error);
+      }
       // Fallback
     }
   }

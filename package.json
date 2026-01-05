@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check-products": "tsx scripts/check-products-supabase.ts",
+    "migrate-products": "tsx scripts/migrate-products-to-supabase.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
@@ -23,10 +25,12 @@
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.16",
+    "dotenv": "^17.2.3",
     "eslint": "^8.56.0",
     "eslint-config-next": "^14.0.4",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.3.3"
   }
 }

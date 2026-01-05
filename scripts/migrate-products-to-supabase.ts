@@ -1,12 +1,17 @@
 /**
  * Script para migrar productos del archivo JSON a Supabase
- * Ejecutar: npx ts-node scripts/migrate-products-to-supabase.ts
+ * Ejecutar: npx tsx scripts/migrate-products-to-supabase.ts
  * 
  * Requisitos:
  * - Variables de entorno configuradas (.env.local):
  *   - NEXT_PUBLIC_SUPABASE_URL
  *   - SUPABASE_SERVICE_ROLE_KEY o SUPABASE_SECRET_KEY
  */
+
+// Cargar variables de entorno desde .env.local
+import { config } from 'dotenv';
+import { resolve } from 'path';
+config({ path: resolve(process.cwd(), '.env.local') });
 
 import { getSupabaseAdmin } from '../lib/supabase';
 import { Product } from '../types/product';
@@ -64,9 +69,15 @@ async function migrateProducts() {
     .from('products')
     .select('id');
 
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    console.error('❌ Error al verificar productos existentes:', fetchError);
-    process.exit(1);
+  if (fetchError) {
+    if (fetchError.code === 'PGRST205') {
+      console.error('❌ La tabla "products" no existe en Supabase. Ejecuta primero la migración 005_products.sql');
+      process.exit(1);
+    }
+    if (fetchError.code !== 'PGRST116') {
+      console.error('❌ Error al verificar productos existentes:', fetchError);
+      process.exit(1);
+    }
   }
 
   const existingIds = new Set((existingProducts || []).map((p: any) => p.id));

@@ -38,6 +38,10 @@ CREATE TRIGGER trigger_update_products_updated_at
 -- Políticas RLS (Row Level Security)
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
+-- Eliminar políticas existentes si existen (para permitir re-ejecutar la migración)
+DROP POLICY IF EXISTS "Allow public read access to products" ON products;
+DROP POLICY IF EXISTS "Allow service role write access to products" ON products;
+
 -- Permitir lectura pública (los productos son públicos)
 CREATE POLICY "Allow public read access to products"
   ON products

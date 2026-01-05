@@ -265,15 +265,28 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
   if (isSupabaseConfigured()) {
     try {
       const supabase = getSupabaseAdmin();
-      const { error } = await supabase
+      
+      // Preparar datos para actualizar (sin updated_at, el trigger lo maneja)
+      const updateData = toSupabaseRow(updatedProduct);
+      delete updateData.updated_at; // Dejar que el trigger de Supabase lo actualice
+      
+      const { data, error } = await supabase
         .from('products')
-        .update(toSupabaseRow(updatedProduct))
-        .eq('id', id);
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) {
         console.error('Error updating product in Supabase:', error);
         throw new Error('Failed to update product in database');
       }
+      
+      // Retornar el producto actualizado desde Supabase (con updated_at del trigger)
+      if (data) {
+        return fromSupabaseRow(data);
+      }
+      
       return updatedProduct;
     } catch (error) {
       console.error('Supabase operation failed:', error);

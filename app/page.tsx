@@ -49,7 +49,15 @@ function HomeContent() {
   }, []) // Solo ejecutar una vez al montar
 
   useEffect(() => {
-    fetch('/api/products')
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now()
+    fetch(`/api/products?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      },
+    })
       .then(res => res.json())
       .then(data => {
         setProducts(data)

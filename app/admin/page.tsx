@@ -36,7 +36,15 @@ function AdminPageContent() {
   }, [])
 
   const loadProducts = async () => {
-    const res = await fetch('/api/admin/products')
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now()
+    const res = await fetch(`/api/admin/products?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      },
+    })
     const data = await res.json()
     setProducts(data)
   }

@@ -10,7 +10,14 @@ import { Product } from '@/types/product'
 export async function GET() {
   try {
     const products = await getProducts()
-    return NextResponse.json(products)
+    // Agregar headers para evitar caché
+    return NextResponse.json(products, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    })
   } catch (error) {
     return NextResponse.json(
       { error: 'Error al obtener productos' },

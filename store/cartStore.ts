@@ -74,7 +74,7 @@ export const useCartStore = create<CartStore>((set, get) => {
       }
       
       set({ items: newItems });
-      saveCartToStorage(newItems, get().deliveryType, get().comuna);
+      saveCartToStorage(newItems, get().deliveryType, get().comuna, get().customerName);
     },
     removeItem: (itemId) => {
       const newItems = get().items.filter(item => 

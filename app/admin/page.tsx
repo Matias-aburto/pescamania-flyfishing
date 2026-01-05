@@ -387,7 +387,7 @@ export default function AdminPage() {
                         No hay imagen seleccionada
                       </p>
                       <p className="text-xs text-gray-400">
-                        Haz clic en "Subir Imagen" para seleccionar un archivo
+                        Haz clic en &quot;Subir Imagen&quot; para seleccionar un archivo
                       </p>
                     </div>
                   )}
@@ -524,7 +524,7 @@ export default function AdminPage() {
                                   {variantImageUploading === variant.id ? 'Subiendo...' : 'Subir'}
                                 </button>
                                 <input
-                                  ref={el => variantFileInputRefs.current[variant.id] = el}
+                                  ref={el => { variantFileInputRefs.current[variant.id] = el; }}
                                   type="file"
                                   accept="image/jpeg,image/jpg,image/png,image/webp"
                                   onChange={e => handleVariantImageUpload(variant.id, e)}

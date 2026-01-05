@@ -44,13 +44,13 @@ export default function CartSidebar() {
     // Cargar número de WhatsApp desde configuración
     fetch('/api/admin/settings')
       .then(res => res.json())
-      .then((data: AppSettings) => {
+      .then((data: any) => {
         // Migrar formato antiguo si existe
         if (data.announcementBar?.message && !data.announcementBar?.messages) {
           data.announcementBar.messages = [data.announcementBar.message]
           delete data.announcementBar.message
         }
-        setSettings(data)
+        setSettings(data as AppSettings)
         if (data.whatsappNumber) {
           setWhatsappNumber(data.whatsappNumber)
         }

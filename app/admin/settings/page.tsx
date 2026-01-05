@@ -415,7 +415,7 @@ export default function SettingsPage() {
               </h2>
             </div>
             <p className="text-sm text-gray-600 mb-4">
-              Configura la dirección donde los clientes pueden retirar sus pedidos. Esta dirección se mostrará en el carrito cuando seleccionen "Retiro".
+              Configura la dirección donde los clientes pueden retirar sus pedidos. Esta dirección se mostrará en el carrito cuando seleccionen &quot;Retiro&quot;.
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

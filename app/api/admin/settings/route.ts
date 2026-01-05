@@ -3,7 +3,7 @@ import { getSettings, saveSettings, AppSettings } from '@/lib/settings'
 
 export async function GET() {
   try {
-    const settings = getSettings()
+    const settings = await getSettings()
     // Migrar formato antiguo si existe
     let announcementBar = settings.announcementBar || {
       enabled: false,
@@ -92,7 +92,7 @@ export async function PUT(request: Request) {
         rotationInterval: announcementBar.rotationInterval || 5,
       },
     }
-    saveSettings(settings)
+    await saveSettings(settings)
     return NextResponse.json(settings)
   } catch (error) {
     console.error('Error saving settings:', error)

@@ -20,12 +20,12 @@ export const metadata: Metadata = {
   description: 'Catálogo de patrones de moscas para fly fishing',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const settings = getSettings()
+  const settings = await getSettings()
   
   return (
     <html lang="es">

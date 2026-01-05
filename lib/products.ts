@@ -266,9 +266,13 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
     try {
       const supabase = getSupabaseAdmin();
       
-      // Preparar datos para actualizar (sin updated_at, el trigger lo maneja)
+      // Preparar datos para actualizar
       const updateData = toSupabaseRow(updatedProduct);
-      delete updateData.updated_at; // Dejar que el trigger de Supabase lo actualice
+      delete updateData.created_at; // No actualizar created_at
+      
+      // Forzar actualización de updated_at directamente (además del trigger)
+      // Esto asegura que updated_at siempre se actualice, incluso si Supabase optimiza el UPDATE
+      updateData.updated_at = new Date().toISOString();
       
       const { data, error } = await supabase
         .from('products')
@@ -282,7 +286,7 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
         throw new Error('Failed to update product in database');
       }
       
-      // Retornar el producto actualizado desde Supabase (con updated_at del trigger)
+      // Retornar el producto actualizado desde Supabase (con updated_at actualizado)
       if (data) {
         return fromSupabaseRow(data);
       }

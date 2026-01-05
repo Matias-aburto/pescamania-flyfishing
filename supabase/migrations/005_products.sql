@@ -20,9 +20,11 @@ CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at);
 CREATE INDEX IF NOT EXISTS idx_products_tags ON products USING GIN(tags);
 
 -- Función para actualizar updated_at automáticamente
+-- Siempre actualiza updated_at, incluso si no hay cambios en otros campos
 CREATE OR REPLACE FUNCTION update_products_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Siempre actualizar updated_at, incluso si los valores son iguales
   NEW.updated_at = NOW();
   RETURN NEW;
 END;

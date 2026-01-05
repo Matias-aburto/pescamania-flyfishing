@@ -6,46 +6,44 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 
-interface MenuItem {
-  id: string
-  label: string
-  url: string
+import { AppSettings, MenuItem } from '@/lib/settings'
+
+interface NavbarProps {
+  initialSettings?: AppSettings
 }
 
-interface AppSettings {
-  whatsappNumber: string
-  logo: string
-  menuItems?: MenuItem[]
-  announcementBar?: {
-    enabled: boolean
-    messages: string[]
-    position: 'top' | 'bottom'
-    backgroundColor?: string
-    textColor?: string
-    rotationInterval?: number
-  }
-}
-
-export default function Navbar() {
+export default function Navbar({ initialSettings }: NavbarProps) {
   const { getTotalItems, openCart, items } = useCartStore()
   const [mounted, setMounted] = useState(false)
-  const [settings, setSettings] = useState<AppSettings | null>(null)
+  const [settings, setSettings] = useState<AppSettings | null>(initialSettings || null)
 
   useEffect(() => {
     setMounted(true)
-    // Cargar configuración
-    fetch('/api/admin/settings')
-      .then(res => res.json())
-      .then(data => {
-        // Migrar formato antiguo si existe
-        if (data.announcementBar?.message && !data.announcementBar?.messages) {
-          data.announcementBar.messages = [data.announcementBar.message]
-          delete data.announcementBar.message
-        }
-        setSettings(data)
-      })
-      .catch(() => {})
-  }, [])
+    
+    // Usar valores iniciales del window si están disponibles
+    if ((window as any).__APP_SETTINGS__) {
+      const windowSettings = (window as any).__APP_SETTINGS__
+      // Migrar formato antiguo si existe
+      if (windowSettings.announcementBar?.message && !windowSettings.announcementBar?.messages) {
+        windowSettings.announcementBar.messages = [windowSettings.announcementBar.message]
+        delete windowSettings.announcementBar.message
+      }
+      setSettings(windowSettings)
+    } else if (!initialSettings) {
+      // Solo hacer fetch si no tenemos valores iniciales
+      fetch('/api/admin/settings')
+        .then(res => res.json())
+        .then(data => {
+          // Migrar formato antiguo si existe
+          if (data.announcementBar?.message && !data.announcementBar?.messages) {
+            data.announcementBar.messages = [data.announcementBar.message]
+            delete data.announcementBar.message
+          }
+          setSettings(data)
+        })
+        .catch(() => {})
+    }
+  }, [initialSettings])
 
   // Calcular totalItems solo después de montar para evitar error de hidratación
   const totalItems = mounted ? getTotalItems() : 0

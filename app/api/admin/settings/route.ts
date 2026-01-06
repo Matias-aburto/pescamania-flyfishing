@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getSettings, saveSettings, AppSettings } from '@/lib/settings'
 
+// Settings cambian poco, cachear por 60 segundos
+export const revalidate = 60
+
 export async function GET() {
   try {
     const settings = await getSettings()
@@ -42,7 +45,14 @@ export async function GET() {
         rotationInterval: announcementBar.rotationInterval || 5,
       },
     }
-    return NextResponse.json(fullSettings)
+    // Cachear settings con revalidación (60 segundos)
+    return NextResponse.json(fullSettings, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        'CDN-Cache-Control': 'public, s-maxage=60',
+        'Vercel-CDN-Cache-Control': 'public, s-maxage=60',
+      },
+    })
   } catch (error) {
     return NextResponse.json(
       { error: 'Error al obtener configuración' },

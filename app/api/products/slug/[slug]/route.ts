@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getProductBySlug } from '@/lib/products'
 
-// Forzar que esta ruta sea dinámica y no se cachee
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// Revalidar cada 30 segundos
+export const revalidate = 30
 
 export async function GET(
   request: Request,
@@ -17,12 +16,13 @@ export async function GET(
         { status: 404 }
       )
     }
-    // Agregar headers para evitar caché
+    
+    // Cachear con revalidación
     return NextResponse.json(product, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=300',
+        'CDN-Cache-Control': 'public, s-maxage=30',
+        'Vercel-CDN-Cache-Control': 'public, s-maxage=30',
       },
     })
   } catch (error) {

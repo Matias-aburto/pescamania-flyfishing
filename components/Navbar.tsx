@@ -27,14 +27,23 @@ export default function Navbar({ initialSettings }: NavbarProps) {
         setSettings(initialSettings)
       }
       
-      // Siempre hacer fetch para obtener los valores más recientes
-      fetch('/api/admin/settings', {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-        },
-      })
+      // Verificar si ya hay settings en window y son recientes
+      const windowSettings = (window as any).__APP_SETTINGS__
+      const lastFetch = (window as any).__APP_SETTINGS_LAST_FETCH
+      const now = Date.now()
+      
+      if (windowSettings && lastFetch && (now - lastFetch) < 60000) {
+        // Usar settings del window si son recientes (menos de 60 segundos)
+        if (windowSettings.announcementBar?.message && !windowSettings.announcementBar?.messages) {
+          windowSettings.announcementBar.messages = [windowSettings.announcementBar.message]
+          delete windowSettings.announcementBar.message
+        }
+        setSettings(windowSettings)
+        return
+      }
+      
+      // Solo hacer fetch si no hay settings recientes en window
+      fetch('/api/admin/settings')
         .then(res => res.json())
         .then(data => {
           // Migrar formato antiguo si existe
@@ -45,6 +54,7 @@ export default function Navbar({ initialSettings }: NavbarProps) {
           setSettings(data)
           // Actualizar window.__APP_SETTINGS__ para que otros componentes lo usen
           ;(window as any).__APP_SETTINGS__ = data
+          ;(window as any).__APP_SETTINGS_LAST_FETCH = now
         })
         .catch(() => {
           // Si falla el fetch, usar valores iniciales o del window como último recurso
@@ -64,12 +74,23 @@ export default function Navbar({ initialSettings }: NavbarProps) {
 
     // Escuchar eventos de actualización de settings
     const handleSettingsUpdate = () => {
-      fetch('/api/admin/settings', {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
-      })
+      // Solo hacer fetch si no hay settings en window o si pasaron más de 60 segundos
+      const windowSettings = (window as any).__APP_SETTINGS__
+      const lastFetch = (window as any).__APP_SETTINGS_LAST_FETCH
+      const now = Date.now()
+      
+      // Si hay settings en window y fueron cargados hace menos de 60 segundos, usar esos
+      if (windowSettings && lastFetch && (now - lastFetch) < 60000) {
+        if (windowSettings.announcementBar?.message && !windowSettings.announcementBar?.messages) {
+          windowSettings.announcementBar.messages = [windowSettings.announcementBar.message]
+          delete windowSettings.announcementBar.message
+        }
+        setSettings(windowSettings)
+        return
+      }
+      
+      // Solo hacer fetch si realmente es necesario
+      fetch('/api/admin/settings')
         .then(res => res.json())
         .then(data => {
           // Migrar formato antiguo si existe
@@ -80,6 +101,7 @@ export default function Navbar({ initialSettings }: NavbarProps) {
           setSettings(data)
           // Actualizar window.__APP_SETTINGS__
           ;(window as any).__APP_SETTINGS__ = data
+          ;(window as any).__APP_SETTINGS_LAST_FETCH = now
           // Disparar evento para otros componentes
           window.dispatchEvent(new CustomEvent('settingsUpdated'))
         })
@@ -89,10 +111,10 @@ export default function Navbar({ initialSettings }: NavbarProps) {
     // Escuchar evento personalizado cuando se actualizan los settings
     window.addEventListener('settingsUpdated', handleSettingsUpdate)
     
-    // También verificar periódicamente si hay cambios (cada 30 segundos)
+    // Verificar periódicamente si hay cambios (cada 2 minutos, no cada 30 segundos)
     const interval = setInterval(() => {
       handleSettingsUpdate()
-    }, 30000)
+    }, 120000) // 2 minutos en lugar de 30 segundos
 
     return () => {
       window.removeEventListener('settingsUpdated', handleSettingsUpdate)

@@ -36,15 +36,9 @@ function AdminPageContent() {
   }, [])
 
   const loadProducts = async () => {
-    // Agregar timestamp para evitar caché
-    const timestamp = Date.now()
-    const res = await fetch(`/api/admin/products?t=${timestamp}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-      },
-    })
+    // El servidor ya maneja el caché con revalidación (10s para admin)
+    // El navegador puede usar su caché HTTP normal
+    const res = await fetch('/api/admin/products')
     const data = await res.json()
     setProducts(data)
   }

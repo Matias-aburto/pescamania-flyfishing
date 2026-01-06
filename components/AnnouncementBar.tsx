@@ -61,12 +61,22 @@ export default function AnnouncementBar({ position }: AnnouncementBarProps) {
 
     // Escuchar eventos de actualización
     const handleSettingsUpdate = () => {
-      fetch('/api/admin/settings', {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
-      })
+      // Usar settings del window si son recientes (menos de 60 segundos)
+      const windowSettings = (window as any).__APP_SETTINGS__
+      const lastFetch = (window as any).__APP_SETTINGS_LAST_FETCH
+      const now = Date.now()
+      
+      if (windowSettings && lastFetch && (now - lastFetch) < 60000) {
+        if (windowSettings.announcementBar?.message && !windowSettings.announcementBar?.messages) {
+          windowSettings.announcementBar.messages = [windowSettings.announcementBar.message]
+          delete windowSettings.announcementBar.message
+        }
+        setSettings(windowSettings)
+        return
+      }
+      
+      // Solo hacer fetch si no hay settings recientes
+      fetch('/api/admin/settings')
         .then(res => res.json())
         .then(data => {
           if (data.announcementBar?.message && !data.announcementBar?.messages) {
@@ -75,6 +85,7 @@ export default function AnnouncementBar({ position }: AnnouncementBarProps) {
           }
           setSettings(data)
           ;(window as any).__APP_SETTINGS__ = data
+          ;(window as any).__APP_SETTINGS_LAST_FETCH = now
         })
         .catch(() => {})
     }

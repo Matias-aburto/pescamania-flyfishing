@@ -23,15 +23,9 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (params.slug) {
-      // Agregar timestamp para evitar caché del fetch
-      const timestamp = Date.now()
-      fetch(`/api/products/slug/${params.slug}?t=${timestamp}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-        },
-      })
+      // El servidor ya maneja el caché con revalidación (30s)
+      // El navegador puede usar su caché HTTP normal
+      fetch(`/api/products/slug/${params.slug}`)
         .then(res => res.json())
         .then(data => {
           setProduct(data)

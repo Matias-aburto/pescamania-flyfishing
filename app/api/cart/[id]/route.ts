@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { getSharedCartById } from '@/lib/sharedCarts'
 import { getProducts } from '@/lib/products'
 
-// Forzar que esta ruta sea dinámica y no se cachee
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// Carritos compartidos pueden cachearse brevemente (5 segundos)
+// ya que los cambios no son tan frecuentes
+export const revalidate = 5
 
 export async function GET(
   request: Request,
@@ -49,12 +49,12 @@ export async function GET(
       items: syncedItems,
     }
 
-    // Agregar headers para evitar caché
+    // Cache corta para carritos compartidos
     return NextResponse.json(syncedCart, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        'Cache-Control': 'public, s-maxage=5, stale-while-revalidate=60',
+        'CDN-Cache-Control': 'public, s-maxage=5',
+        'Vercel-CDN-Cache-Control': 'public, s-maxage=5',
       },
     })
   } catch (error) {

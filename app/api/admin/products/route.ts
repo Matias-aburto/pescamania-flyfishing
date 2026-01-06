@@ -7,19 +7,16 @@ import {
 } from '@/lib/products'
 import { Product } from '@/types/product'
 
-// Forzar que esta ruta sea dinámica y no se cachee
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// Admin siempre necesita datos frescos, pero con caché corta para reducir invocaciones
+export const revalidate = 10
 
 export async function GET() {
   try {
     const products = await getProducts()
-    // Agregar headers para evitar caché
+    // Cache corta para admin (10 segundos) para reducir invocaciones pero mantener frescura
     return NextResponse.json(products, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        'Cache-Control': 'private, s-maxage=10, stale-while-revalidate=60',
       },
     })
   } catch (error) {

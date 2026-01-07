@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  compress: true, // Habilitar compresión gzip
   images: {
     domains: ['localhost'],
     unoptimized: true,

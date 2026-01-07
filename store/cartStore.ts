@@ -2,24 +2,47 @@ import { create } from 'zustand';
 import { CartItem, Product, ProductVariant } from '@/types/product';
 
 // Función para sincronizar productos del carrito con datos actuales
+// Optimizada: solo sincroniza si han pasado más de 5 minutos desde la última sincronización
 async function syncCartProducts(items: CartItem[]): Promise<CartItem[]> {
   try {
-    // Obtener todos los productos actuales
-    const response = await fetch('/api/products?t=' + Date.now(), {
-      cache: 'no-store',
+    // Verificar si hay una sincronización reciente en localStorage
+    const lastSync = localStorage.getItem('cart_last_sync');
+    const now = Date.now();
+    
+    // Solo sincronizar si han pasado más de 5 minutos (300000ms)
+    if (lastSync && (now - parseInt(lastSync)) < 300000) {
+      return items; // Retornar items sin cambios si la sincronización es reciente
+    }
+    
+    // Obtener solo los IDs de productos en el carrito
+    const productIds = items.map(item => item.product.id);
+    
+    if (productIds.length === 0) {
+      return items;
+    }
+    
+    // Obtener solo los productos del carrito (no todos los productos)
+    const response = await fetch('/api/products/sync', {
+      method: 'POST',
       headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ ids: productIds }),
     });
-    const allProducts: Product[] = await response.json();
+    
+    if (!response.ok) {
+      // Si falla, retornar items originales
+      return items;
+    }
+    
+    const updatedProducts: Product[] = await response.json();
     
     // Crear un mapa de productos actualizados por ID
     const productsMap = new Map<string, Product>();
-    allProducts.forEach(p => productsMap.set(p.id, p));
+    updatedProducts.forEach(p => productsMap.set(p.id, p));
     
     // Actualizar productos en el carrito con datos frescos
-    return items.map(item => {
+    const syncedItems = items.map(item => {
       const updatedProduct = productsMap.get(item.product.id);
       if (updatedProduct) {
         return {
@@ -29,6 +52,11 @@ async function syncCartProducts(items: CartItem[]): Promise<CartItem[]> {
       }
       return item; // Si no se encuentra, mantener el original
     });
+    
+    // Guardar timestamp de última sincronización
+    localStorage.setItem('cart_last_sync', now.toString());
+    
+    return syncedItems;
   } catch (error) {
     console.error('Error syncing cart products:', error);
     return items; // En caso de error, retornar items originales

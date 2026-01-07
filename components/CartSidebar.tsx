@@ -35,12 +35,19 @@ export default function CartSidebar() {
     syncProducts,
   } = useCartStore()
   
-  // Sincronizar productos cuando se abre el carrito
+  // Sincronizar productos cuando se abre el carrito (solo si han pasado más de 5 minutos)
   useEffect(() => {
     if (isOpen && items.length > 0) {
-      syncProducts()
+      const lastSync = typeof window !== 'undefined' ? localStorage.getItem('cart_last_sync') : null
+      const now = Date.now()
+      
+      // Solo sincronizar si han pasado más de 5 minutos desde la última sincronización
+      if (!lastSync || (now - parseInt(lastSync)) >= 300000) {
+        syncProducts()
+      }
     }
-  }, [isOpen, syncProducts])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]) // Solo cuando cambia isOpen
   const [whatsappNumber, setWhatsappNumber] = useState<string>('')
   const [sharing, setSharing] = useState(false)
   const [settings, setSettings] = useState<AppSettings | null>(null)

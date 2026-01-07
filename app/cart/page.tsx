@@ -47,9 +47,15 @@ export default function CartPage() {
     setMounted(true)
     // Sincronizar nameInput con customerName del store
     setNameInput(customerName || '')
-    // Sincronizar productos del carrito con datos actuales
+    // Sincronizar productos del carrito con datos actuales (solo si han pasado más de 5 minutos)
     if (items.length > 0) {
-      syncProducts()
+      const lastSync = typeof window !== 'undefined' ? localStorage.getItem('cart_last_sync') : null
+      const now = Date.now()
+      
+      // Solo sincronizar si han pasado más de 5 minutos desde la última sincronización
+      if (!lastSync || (now - parseInt(lastSync)) >= 300000) {
+        syncProducts()
+      }
     }
   }, []) // Solo una vez al montar
 

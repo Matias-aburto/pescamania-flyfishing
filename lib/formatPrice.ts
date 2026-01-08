@@ -4,6 +4,8 @@
  * @returns String formateado con formato chileno (ej: $12.345)
  */
 export function formatPrice(price: number): string {
-  return `$${price.toLocaleString('es-CL')}`
+  // Redondear a número entero para evitar decimales
+  const precioRedondeado = Math.round(price)
+  return `$${precioRedondeado.toLocaleString('es-CL', { maximumFractionDigits: 0, minimumFractionDigits: 0 })}`
 }
 

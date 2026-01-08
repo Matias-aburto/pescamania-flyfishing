@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Save, Upload, X, ArrowLeft, Settings, MessageCircle, Image as ImageIcon, Megaphone, Plus, Trash2, Palette, ShoppingBag, Package, LogOut, Menu, GripVertical, Edit2 } from 'lucide-react'
+import { Save, Upload, X, ArrowLeft, Settings, MessageCircle, Image as ImageIcon, Megaphone, Plus, Trash2, Palette, ShoppingBag, Package, LogOut, Menu, GripVertical, Edit2, Search, Truck } from 'lucide-react'
 import Link from 'next/link'
 import { PLACEHOLDER_IMAGE } from '@/lib/constants'
 import { formatPrice } from '@/lib/formatPrice'
@@ -20,6 +20,12 @@ interface AppSettings {
   primaryColor: string
   minimumPurchase: number
   pickupAddress?: string
+  starkenCiudadOrigen?: number
+  starkenDefaultAlto?: number
+  starkenDefaultAncho?: number
+  starkenDefaultLargo?: number
+  starkenDefaultKilos?: number
+  starkenPorcentajeAdicional?: number
   menuItems?: MenuItem[]
   announcementBar: {
     enabled: boolean
@@ -34,6 +40,7 @@ interface AppSettings {
 import AdminGuard from '@/components/AdminGuard'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
+import { ShippingCity } from '@/types/shipping'
 
 function SettingsPageContent() {
   const router = useRouter()
@@ -51,6 +58,12 @@ function SettingsPageContent() {
     primaryColor: '#0284c7',
     minimumPurchase: 0,
     pickupAddress: '',
+    starkenCiudadOrigen: undefined,
+    starkenDefaultAlto: 10,
+    starkenDefaultAncho: 10,
+    starkenDefaultLargo: 10,
+    starkenDefaultKilos: 0.1,
+    starkenPorcentajeAdicional: 0,
     menuItems: [],
     announcementBar: {
       enabled: false,
@@ -71,9 +84,51 @@ function SettingsPageContent() {
   const [faviconPreview, setFaviconPreview] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const faviconInputRef = useRef<HTMLInputElement>(null)
+  
+  // Estados para el selector de ciudad de origen Starken
+  const [ciudadesOrigen, setCiudadesOrigen] = useState<ShippingCity[]>([])
+  const [busquedaCiudadOrigen, setBusquedaCiudadOrigen] = useState<string>('')
+  const [mostrarDropdownCiudadOrigen, setMostrarDropdownCiudadOrigen] = useState(false)
+  const ciudadOrigenDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     loadSettings()
+    loadCiudadesOrigen()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  
+  // Sincronizar nombre de ciudad cuando se cargan los settings o las ciudades
+  useEffect(() => {
+    if (settings.starkenCiudadOrigen && ciudadesOrigen.length > 0) {
+      const ciudadSeleccionada = ciudadesOrigen.find(c => c.code === settings.starkenCiudadOrigen)
+      if (ciudadSeleccionada && busquedaCiudadOrigen !== ciudadSeleccionada.name) {
+        setBusquedaCiudadOrigen(ciudadSeleccionada.name)
+      }
+    }
+  }, [settings.starkenCiudadOrigen, ciudadesOrigen])
+  
+  // Cargar ciudades de origen de Starken
+  const loadCiudadesOrigen = async () => {
+    try {
+      const res = await fetch('/api/shipping/cities/origin')
+      if (res.ok) {
+        const ciudades: ShippingCity[] = await res.json()
+        setCiudadesOrigen(ciudades)
+      }
+    } catch (error) {
+      console.error('Error al cargar ciudades de origen:', error)
+    }
+  }
+  
+  // Cerrar dropdown al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ciudadOrigenDropdownRef.current && !ciudadOrigenDropdownRef.current.contains(event.target as Node)) {
+        setMostrarDropdownCiudadOrigen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const loadSettings = async () => {
@@ -861,6 +916,233 @@ function SettingsPageContent() {
               <p className="text-xs text-gray-500 mt-2">
                 Deja vacío si no quieres mostrar una dirección de retiro.
               </p>
+            </div>
+          </motion.div>
+
+          {/* Configuración de Ciudad de Origen Starken */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-lg shadow-md p-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <Truck className="text-primary-600" size={24} />
+              <h2 className="text-xl font-bold text-gray-900">
+                Configuración de Envíos Starken
+              </h2>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ciudad de Origen (Starken)
+                </label>
+                <div className="relative" ref={ciudadOrigenDropdownRef}>
+                  <input
+                    type="text"
+                    value={busquedaCiudadOrigen}
+                    onChange={(e) => {
+                      setBusquedaCiudadOrigen(e.target.value)
+                      setMostrarDropdownCiudadOrigen(true)
+                      // Si se borra el texto, limpiar la selección
+                      if (!e.target.value) {
+                        setSettings(prev => ({
+                          ...prev,
+                          starkenCiudadOrigen: undefined,
+                        }))
+                      }
+                    }}
+                    onFocus={() => setMostrarDropdownCiudadOrigen(true)}
+                    placeholder="Buscar ciudad de origen..."
+                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <Search 
+                    size={18} 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" 
+                  />
+                  {mostrarDropdownCiudadOrigen && ciudadesOrigen.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {ciudadesOrigen
+                        .filter(ciudad => 
+                          ciudad.name.toLowerCase().includes(busquedaCiudadOrigen.toLowerCase())
+                        )
+                        .slice(0, 20)
+                        .map((ciudad) => (
+                          <button
+                            key={ciudad.code}
+                            type="button"
+                            onClick={() => {
+                              setSettings(prev => ({
+                                ...prev,
+                                starkenCiudadOrigen: ciudad.code,
+                              }))
+                              setBusquedaCiudadOrigen(ciudad.name)
+                              setMostrarDropdownCiudadOrigen(false)
+                            }}
+                            className={`w-full text-left px-4 py-2 hover:bg-gray-100 text-sm ${
+                              settings.starkenCiudadOrigen === ciudad.code
+                                ? 'bg-primary-50 text-primary-700 font-medium'
+                                : 'text-gray-900'
+                            }`}
+                          >
+                            {ciudad.name} <span className="text-gray-500 text-xs">({ciudad.code})</span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                  {mostrarDropdownCiudadOrigen && ciudadesOrigen.length === 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                      <div className="px-4 py-2 text-sm text-gray-500">
+                        Cargando ciudades...
+                      </div>
+                    </div>
+                  )}
+                  {mostrarDropdownCiudadOrigen && 
+                   ciudadesOrigen.length > 0 && 
+                   busquedaCiudadOrigen && 
+                   ciudadesOrigen.filter(ciudad => 
+                     ciudad.name.toLowerCase().includes(busquedaCiudadOrigen.toLowerCase())
+                   ).length === 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                      <div className="px-4 py-2 text-sm text-gray-500">
+                        No se encontraron ciudades
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  Selecciona la ciudad de origen para calcular tarifas de envío con Starken.
+                  {settings.starkenCiudadOrigen && (
+                    <span className="block mt-1 text-primary-600 font-medium">
+                      Ciudad seleccionada: Código {settings.starkenCiudadOrigen}
+                    </span>
+                  )}
+                </p>
+              </div>
+              
+              {/* Dimensiones por defecto */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                  Dimensiones por Defecto
+                </h3>
+                <p className="text-xs text-gray-600 mb-4">
+                  Estos valores se usarán cuando los productos no tengan dimensiones o peso especificados.
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Alto (cm)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="0.1"
+                      value={settings.starkenDefaultAlto || 10}
+                      onChange={e =>
+                        setSettings(prev => ({
+                          ...prev,
+                          starkenDefaultAlto: e.target.value ? parseFloat(e.target.value) : undefined,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Ancho (cm)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="0.1"
+                      value={settings.starkenDefaultAncho || 10}
+                      onChange={e =>
+                        setSettings(prev => ({
+                          ...prev,
+                          starkenDefaultAncho: e.target.value ? parseFloat(e.target.value) : undefined,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Largo (cm)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="0.1"
+                      value={settings.starkenDefaultLargo || 10}
+                      onChange={e =>
+                        setSettings(prev => ({
+                          ...prev,
+                          starkenDefaultLargo: e.target.value ? parseFloat(e.target.value) : undefined,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Peso (kg)
+                    </label>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.01"
+                      value={settings.starkenDefaultKilos || 0.1}
+                      onChange={e =>
+                        setSettings(prev => ({
+                          ...prev,
+                          starkenDefaultKilos: e.target.value ? parseFloat(e.target.value) : undefined,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-gray-500">
+                  Valores actuales: {settings.starkenDefaultAlto || 10}cm × {settings.starkenDefaultAncho || 10}cm × {settings.starkenDefaultLargo || 10}cm, {settings.starkenDefaultKilos || 0.1}kg por producto
+                </p>
+              </div>
+              
+              {/* Porcentaje adicional */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                  Ajuste de Costo de Envío
+                </h3>
+                <p className="text-xs text-gray-600 mb-4">
+                  Aplica un porcentaje adicional (o negativo) al costo de envío estimado. Este ajuste se reflejará directamente en el precio mostrado al usuario.
+                </p>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Porcentaje Adicional (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={settings.starkenPorcentajeAdicional || 0}
+                    onChange={e =>
+                      setSettings(prev => ({
+                        ...prev,
+                        starkenPorcentajeAdicional: e.target.value ? parseFloat(e.target.value) : 0,
+                      }))
+                    }
+                    placeholder="Ej: 10 para agregar 10%, -5 para reducir 5%"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                  />
+                  <p className="mt-2 text-xs text-gray-500">
+                    {settings.starkenPorcentajeAdicional && settings.starkenPorcentajeAdicional !== 0 ? (
+                      <span>
+                        {settings.starkenPorcentajeAdicional > 0 ? 'Se agregará' : 'Se reducirá'} un {Math.abs(settings.starkenPorcentajeAdicional)}% al costo de envío estimado.
+                      </span>
+                    ) : (
+                      <span>Sin ajuste aplicado (0%)</span>
+                    )}
+                  </p>
+                </div>
+              </div>
             </div>
           </motion.div>
 

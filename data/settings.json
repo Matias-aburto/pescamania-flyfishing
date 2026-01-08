@@ -5,6 +5,7 @@
   "primaryColor": "#070066",
   "minimumPurchase": 10000,
   "pickupAddress": "Galvarino 900, Loncoche",
+  "starkenCiudadOrigen": 2972,
   "menuItems": [
     {
       "id": "1767629906719",

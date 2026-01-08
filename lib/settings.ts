@@ -17,6 +17,12 @@ export interface AppSettings {
   primaryColor: string;
   minimumPurchase: number; // Mínimo de compra en pesos chilenos
   pickupAddress?: string; // Dirección de retiro
+  starkenCiudadOrigen?: number; // Código de ciudad de origen para Starken
+  starkenDefaultAlto?: number; // Alto por defecto en cm para productos sin dimensiones
+  starkenDefaultAncho?: number; // Ancho por defecto en cm para productos sin dimensiones
+  starkenDefaultLargo?: number; // Largo por defecto en cm para productos sin dimensiones
+  starkenDefaultKilos?: number; // Peso por defecto en kg para productos sin peso
+  starkenPorcentajeAdicional?: number; // Porcentaje adicional (puede ser negativo) a aplicar al costo de envío
   menuItems?: MenuItem[]; // Items del menú principal
   announcementBar: {
     enabled: boolean;
@@ -64,6 +70,12 @@ function fromSupabaseRow(row: any): AppSettings {
     primaryColor: row.primary_color || '#0284c7',
     minimumPurchase: row.minimum_purchase !== undefined ? row.minimum_purchase : 0,
     pickupAddress: row.pickup_address || '',
+    starkenCiudadOrigen: row.starken_ciudad_origen !== undefined ? row.starken_ciudad_origen : undefined,
+    starkenDefaultAlto: row.starken_default_alto !== undefined ? row.starken_default_alto : undefined,
+    starkenDefaultAncho: row.starken_default_ancho !== undefined ? row.starken_default_ancho : undefined,
+    starkenDefaultLargo: row.starken_default_largo !== undefined ? row.starken_default_largo : undefined,
+    starkenDefaultKilos: row.starken_default_kilos !== undefined ? parseFloat(row.starken_default_kilos) : undefined,
+    starkenPorcentajeAdicional: row.starken_porcentaje_adicional !== undefined ? parseFloat(row.starken_porcentaje_adicional) : undefined,
     menuItems: row.menu_items || [],
     announcementBar: row.announcement_bar || {
       enabled: false,
@@ -85,6 +97,12 @@ function toSupabaseRow(settings: AppSettings): any {
     primary_color: settings.primaryColor,
     minimum_purchase: settings.minimumPurchase,
     pickup_address: settings.pickupAddress || '',
+    starken_ciudad_origen: settings.starkenCiudadOrigen !== undefined ? settings.starkenCiudadOrigen : null,
+    starken_default_alto: settings.starkenDefaultAlto !== undefined ? settings.starkenDefaultAlto : null,
+    starken_default_ancho: settings.starkenDefaultAncho !== undefined ? settings.starkenDefaultAncho : null,
+    starken_default_largo: settings.starkenDefaultLargo !== undefined ? settings.starkenDefaultLargo : null,
+    starken_default_kilos: settings.starkenDefaultKilos !== undefined ? settings.starkenDefaultKilos : null,
+    starken_porcentaje_adicional: settings.starkenPorcentajeAdicional !== undefined ? settings.starkenPorcentajeAdicional : null,
     menu_items: settings.menuItems || [],
     announcement_bar: settings.announcementBar,
   };

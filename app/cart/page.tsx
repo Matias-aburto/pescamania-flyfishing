@@ -9,12 +9,14 @@ import { getImageUrl } from '@/lib/imageCache'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { chileComunas } from '@/lib/chileComunas'
+import { ShippingQuote, ShippingCity } from '@/types/shipping'
 
 interface AppSettings {
   whatsappNumber: string
   logo: string
   minimumPurchase?: number
   pickupAddress?: string
+  starkenCiudadOrigen?: number // Código de ciudad de origen para Starken
 }
 
 export default function CartPage() {
@@ -42,6 +44,16 @@ export default function CartPage() {
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [nameInput, setNameInput] = useState<string>('')
   const [mounted, setMounted] = useState(false)
+  
+  // Estados para cotización de envío
+  const [ciudadesDestino, setCiudadesDestino] = useState<ShippingCity[]>([])
+  const [ciudadDestinoSeleccionada, setCiudadDestinoSeleccionada] = useState<number | null>(null)
+  const [busquedaCiudad, setBusquedaCiudad] = useState<string>('')
+  const [mostrarDropdownCiudades, setMostrarDropdownCiudades] = useState(false)
+  const [tarifas, setTarifas] = useState<ShippingQuote[]>([])
+  const [tarifaSeleccionada, setTarifaSeleccionada] = useState<ShippingQuote | null>(null)
+  const [cargandoTarifas, setCargandoTarifas] = useState(false)
+  const [errorTarifas, setErrorTarifas] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -70,7 +82,90 @@ export default function CartPage() {
         }
       })
       .catch(() => {})
+    
+    // Cargar ciudades de destino de Starken
+    const loadCities = async () => {
+      try {
+        const res = await fetch('/api/shipping/cities/destination')
+        if (!res.ok) {
+          console.error('Error al cargar ciudades:', res.status, res.statusText)
+          return
+        }
+        const ciudades: ShippingCity[] = await res.json()
+        console.log('Ciudades cargadas:', ciudades.length)
+        if (ciudades.length > 0) {
+          setCiudadesDestino(ciudades)
+        }
+      } catch (error) {
+        console.error('Error al cargar ciudades de destino:', error)
+      }
+    }
+    
+    loadCities()
   }, [])
+  
+  // Consultar tarifas cuando cambia la ciudad de destino
+  useEffect(() => {
+    if (deliveryType === 'envio' && ciudadDestinoSeleccionada && settings?.starkenCiudadOrigen && items.length > 0) {
+      consultarTarifasEnvio()
+    } else {
+      setTarifas([])
+      setTarifaSeleccionada(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ciudadDestinoSeleccionada, deliveryType, items, settings?.starkenCiudadOrigen])
+  
+  const consultarTarifasEnvio = async () => {
+    if (!ciudadDestinoSeleccionada || !settings?.starkenCiudadOrigen) return
+    
+    setCargandoTarifas(true)
+    setErrorTarifas(null)
+    
+    try {
+      const response = await fetch('/api/shipping/quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          codigoCiudadOrigen: settings.starkenCiudadOrigen,
+          codigoCiudadDestino: ciudadDestinoSeleccionada,
+          items: items.map(item => ({ quantity: item.quantity })),
+        }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || `Error ${response.status}: ${response.statusText}`
+        console.error('Error response:', errorData)
+        throw new Error(errorMessage)
+      }
+      
+      const tarifasData: ShippingQuote[] = await response.json()
+      setTarifas(tarifasData)
+      
+      // Seleccionar automáticamente la tarifa más barata
+      if (tarifasData.length > 0) {
+        const masBarata = tarifasData.reduce((prev, current) => 
+          prev.cost < current.cost ? prev : current
+        )
+        setTarifaSeleccionada(masBarata)
+      } else {
+        setErrorTarifas('No se encontraron tarifas para esta ruta')
+      }
+    } catch (error) {
+      console.error('Error consultando tarifas:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+      console.error('Detalles del error:', errorMessage)
+      setErrorTarifas(`No se pudieron obtener las tarifas de envío: ${errorMessage}`)
+    } finally {
+      setCargandoTarifas(false)
+    }
+  }
+  
+  const ciudadesFiltradas = ciudadesDestino.filter(ciudad =>
+    ciudad.name.toLowerCase().includes(busquedaCiudad.toLowerCase())
+  )
 
   const handleShareCart = async () => {
     if (items.length === 0) {
@@ -161,17 +256,28 @@ export default function CartPage() {
       )
     : chileComunas
 
-  // Cerrar dropdown al hacer click fuera
+  // Cerrar dropdowns al hacer click fuera
   useEffect(() => {
+    if (!mounted) return
+    
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
-      if (!target.closest('.comuna-dropdown-container')) {
+      if (!target.closest('.comuna-dropdown-container') && !target.closest('[data-city-dropdown]')) {
         setShowComunaDropdown(false)
+        setMostrarDropdownCiudades(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [mounted])
+
+  if (!mounted) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-8">Cargando...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -328,23 +434,21 @@ export default function CartPage() {
               </h2>
               
               {/* Campo de nombre del cliente */}
-              {mounted && (
-                <div className="mb-6 pb-4 border-b border-gray-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre (opcional)
-                  </label>
-                  <input
-                    type="text"
-                    value={nameInput}
-                    onChange={(e) => {
-                      setNameInput(e.target.value)
-                      setCustomerName(e.target.value)
-                    }}
-                    placeholder="Tu nombre"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                  />
-                </div>
-              )}
+              <div className="mb-6 pb-4 border-b border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => {
+                    setNameInput(e.target.value)
+                    setCustomerName(e.target.value)
+                  }}
+                  placeholder="Tu nombre"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                />
+              </div>
 
               {/* Tipo de Despacho */}
               <div className="mb-6 pb-4 border-b border-gray-200">
@@ -412,51 +516,132 @@ export default function CartPage() {
                   </motion.button>
                 </div>
 
-                {/* Selector de comuna si es envío */}
+                {/* Selector de ciudad de destino si es envío */}
                 {deliveryType === 'envio' && (
-                  <div className="relative comuna-dropdown-container">
-                    <label className="block text-xs font-medium text-gray-700 mb-2">
-                      Comuna
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={comunaSearch || comuna}
-                        onChange={(e) => {
-                          setComunaSearch(e.target.value)
-                          setShowComunaDropdown(true)
-                        }}
-                        onFocus={() => setShowComunaDropdown(true)}
-                        placeholder="Buscar comuna..."
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                      <Search 
-                        size={18} 
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" 
-                      />
-                      {showComunaDropdown && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                          {filteredComunas.slice(0, 20).map((comunaOption) => (
-                            <button
-                              key={comunaOption}
-                              onClick={() => {
-                                setComuna(comunaOption)
-                                setComunaSearch(comunaOption)
-                                setShowComunaDropdown(false)
-                              }}
-                              className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors text-sm"
-                            >
-                              {comunaOption}
-                            </button>
-                          ))}
-                          {filteredComunas.length === 0 && (
-                            <div className="px-4 py-2 text-sm text-gray-500">
-                              No se encontraron comunas
-                            </div>
-                          )}
-                        </div>
-                      )}
+                  <div className="space-y-3">
+                    <div className="mb-2">
+                      <p className="text-xs text-gray-600 italic">
+                        Cotización de envío con Starken
+                      </p>
                     </div>
+                    <div className="relative">
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Ciudad de Destino
+                      </label>
+                      <div className="relative" data-city-dropdown>
+                        <input
+                          type="text"
+                          value={busquedaCiudad}
+                          onChange={(e) => {
+                            setBusquedaCiudad(e.target.value)
+                            setMostrarDropdownCiudades(true)
+                          }}
+                          onFocus={() => setMostrarDropdownCiudades(true)}
+                          placeholder="Buscar ciudad..."
+                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                        />
+                        <Search 
+                          size={18} 
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" 
+                        />
+                        {mostrarDropdownCiudades && ciudadesFiltradas.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {ciudadesFiltradas.slice(0, 20).map((ciudad) => (
+                              <button
+                                key={ciudad.code}
+                                type="button"
+                                onClick={() => {
+                                  setCiudadDestinoSeleccionada(ciudad.code)
+                                  setBusquedaCiudad(ciudad.name)
+                                  setMostrarDropdownCiudades(false)
+                                  setComuna(ciudad.name) // Guardar también como comuna para compatibilidad
+                                }}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-900"
+                              >
+                                {ciudad.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {mostrarDropdownCiudades && ciudadesFiltradas.length === 0 && busquedaCiudad && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                            <div className="px-4 py-2 text-sm text-gray-500">
+                              No se encontraron ciudades
+                            </div>
+                          </div>
+                        )}
+                        {!busquedaCiudad && ciudadesDestino.length === 0 && mounted && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Cargando ciudades...
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Mostrar tarifas de envío */}
+                    {cargandoTarifas && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mt-3">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                        Consultando tarifas...
+                      </div>
+                    )}
+                    
+                    {errorTarifas && !cargandoTarifas && (
+                      <div className="flex items-start gap-2 text-sm text-red-600 mt-3 p-2 bg-red-50 rounded">
+                        <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                        <span>{errorTarifas}</span>
+                      </div>
+                    )}
+                    
+                    {tarifas.length > 0 && !cargandoTarifas && (
+                      <div className="space-y-2 mt-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-xs font-medium text-gray-700">
+                            Opciones de Envío (Starken)
+                          </label>
+                          <span className="text-xs text-gray-500 italic">
+                            *Estimado
+                          </span>
+                        </div>
+                        {tarifas.map((tarifa, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => setTarifaSeleccionada(tarifa)}
+                            className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                              tarifaSeleccionada === tarifa
+                                ? 'border-primary-600 bg-primary-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {tarifa.deliveryType === 'home' ? 'Domicilio' : 'Agencia'} - {tarifa.serviceType === 'express' ? 'Express' : 'Normal'}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-primary-600">
+                                  {formatPrice(tarifa.cost)}
+                                </p>
+                                <p className="text-xs text-gray-500 italic">
+                                  *Estimado
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                        <p className="text-xs text-gray-500 mt-2 italic">
+                          *Los valores mostrados son estimados proporcionados por Starken. El costo final puede variar.
+                        </p>
+                      </div>
+                    )}
+                    
+                    {!cargandoTarifas && !errorTarifas && tarifas.length === 0 && ciudadDestinoSeleccionada && (
+                      <p className="text-xs text-gray-500 mt-3">
+                        Selecciona una ciudad para ver las tarifas de envío
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -478,11 +663,26 @@ export default function CartPage() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-2xl font-bold mb-6 pb-4 border-b border-gray-200">
-                <span>Total:</span>
-                <span className="text-primary-600">
-                  {formatPrice(getTotalPrice())}
-                </span>
+              <div className="space-y-2 mb-6 pb-4 border-b border-gray-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-semibold text-gray-900">{formatPrice(getTotalPrice())}</span>
+                </div>
+                       {tarifaSeleccionada && (
+                         <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-200">
+                           <div className="flex flex-col">
+                             <span className="text-gray-600">Envío (Starken):</span>
+                             <span className="text-xs text-gray-500 italic">*Estimado</span>
+                           </div>
+                           <span className="font-semibold text-gray-900">{formatPrice(tarifaSeleccionada.cost)}</span>
+                         </div>
+                       )}
+                <div className="flex items-center justify-between text-2xl font-bold pt-2 border-t-2 border-gray-300">
+                  <span>Total:</span>
+                  <span className="text-primary-600">
+                    {formatPrice(getTotalPrice() + (tarifaSeleccionada?.cost || 0))}
+                  </span>
+                </div>
               </div>
 
               {/* Link compartido */}

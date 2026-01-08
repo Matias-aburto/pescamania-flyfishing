@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "check-products": "tsx scripts/check-products-supabase.ts",
-    "migrate-products": "tsx scripts/migrate-products-to-supabase.ts"
+    "migrate-products": "tsx scripts/migrate-products-to-supabase.ts",
+    "find-city": "tsx scripts/find-starken-city.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
